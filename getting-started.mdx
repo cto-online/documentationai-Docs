@@ -1,0 +1,325 @@
+---
+title: Getting started with your documentation site
+description: Make your first edit, add a new page to navigation, and optionally wire up your API Reference using the sample OpenAPI file.
+---
+
+## Start here: first 10 minutes
+
+Set up this Starter Kit as your own documentation by making a real edit, adding a page, and deciding what to do with the sample API Reference.
+
+<Callout kind="alert">
+
+This site ships with placeholder content, including sample pages and a sample `openapi.yaml`. Replace or remove these as you go so you do not ship test content to your customers.
+
+</Callout>
+
+Use this page together with the existing [Introduction](/introduction) and [Quickstart](/quickstart) pages. They focus on content and layout; this guide focuses on wiring files to routes and navigation.
+
+## How routing and files work
+
+Routes map directly to MDX filenames in the repository.
+
+- A file named `getting-started.mdx` renders at `/getting-started`.
+- Nested paths mirror folders: `help-center/guides/setup-project.mdx` renders at `/help-center/guides/setup-project`.
+- Top-level files like `authentication.mdx` render at `/authentication`.
+
+The sidebar and top navigation come from `documentation.json`, not from the folder tree alone. A page only appears in the sidebar if you add it to the appropriate group in `documentation.json`.
+
+<Callout kind="info">
+
+If a page loads when you visit the URL but does not show in the sidebar, the file exists but is missing from `documentation.json`. Add an entry there to fix the navigation.
+
+</Callout>
+
+## Make your first edit
+
+Update any visible page to confirm your editor or git workflow is working.
+
+<Steps>
+
+<Step title="Open a starter page" icon="edit" titleType="p">
+
+- Open [Introduction](/introduction) or [Quickstart](/quickstart) in your editor or dashboard.
+- Locate a short paragraph near the top of the page.
+- Change a sentence to mention your product or team name.
+
+</Step>
+
+<Step title="Save and preview" icon="play-circle" titleType="p">
+
+- Save the file in your editor, or click save/publish in the dashboard.
+- Refresh the browser tab showing your docs.
+- Confirm you see your updated text on the page.
+
+If the browser shows the new wording, your content workflow is working and you are ready to customize more pages.
+
+</Step>
+
+</Steps>
+
+Now that you can edit content, set up a reliable way to add and manage new pages.
+
+## Choose your workflow: dashboard vs git
+
+Use the dashboard editor for quick content changes, or work entirely in git if you prefer code review and version control.
+
+<Tabs>
+
+<Tab title="Dashboard editor" icon="monitor">
+
+Use the visual editor to add and update pages without leaving the browser.
+
+<Steps>
+
+<Step title="Create a page in the dashboard" icon="plus" titleType="p">
+
+- In the left sidebar of the dashboard, click the **+** button in the "Start Here" group.
+- Enter a title such as "Getting Started Notes".
+- The dashboard creates a new MDX page and wires it into navigation for you.
+
+The URL will match the path the dashboard assigns (for example, `/getting-started-notes`), and the new page appears under **Start Here** in the Documentation tab.
+
+</Step>
+
+<Step title="Edit the new page" icon="edit" titleType="p">
+
+- Use the editor to add a heading and a short description of what this page is for.
+- Click save or publish.
+- Refresh your public docs and confirm the new page appears in the sidebar and loads at the expected URL.
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+<Tab title="Git workflow" icon="github">
+
+Use git when you want full control, code review, and local previews.
+
+<Steps>
+
+<Step title="Add a new MDX file" icon="plus" titleType="p">
+
+- In your repo, create a new file at the top level, for example `getting-started.mdx`, or in a folder such as `help-center/guides/new-guide.mdx`.
+- Add frontmatter and some content:
+
+```mdx
+---
+title: Getting started
+description: First steps for our product docs.
+---
+
+## Welcome
+
+Replace this section with the first things new users should do.
+```
+
+- Commit the file and push to your main branch.
+
+Visit `/getting-started` (or the relevant nested path) to confirm the page renders even before you wire it into navigation.
+
+</Step>
+
+<Step title="Add the page to documentation.json" icon="settings" titleType="p">
+
+- Open `documentation.json` in your editor.
+- Locate the **Documentation → Start Here** group:
+
+```json
+{
+  "tab": "Documentation",
+  "groups": [
+    {
+      "group": "Start Here",
+      "pages": [
+        { "title": "Introduction", "path": "introduction" },
+        { "title": "Quickstart", "path": "quickstart" },
+        { "title": "Components", "path": "components" }
+      ]
+    }
+  ]
+}
+```
+
+- Add a new entry to the `pages` array with the relative path (without `.mdx`):
+
+```json
+{
+  "title": "Getting started",
+  "path": "getting-started",
+  "icon": "rocket"
+}
+```
+
+- Save, commit, and push.
+
+The new page now appears in the **Start Here** group and is reachable at `/getting-started`.
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Example navigation entry for Start Here
+
+This snippet shows a small, realistic `documentation.json` section that includes this page under **Start Here**.
+
+<CodeGroup tabs="documentation.json fragment">
+
+```json
+{
+  "tab": "Documentation",
+  "icon": "book",
+  "groups": [
+    {
+      "group": "Start Here",
+      "icon": "rocket",
+      "pages": [
+        {
+          "title": "Introduction",
+          "path": "introduction",
+          "icon": "home"
+        },
+        {
+          "title": "Quickstart",
+          "path": "quickstart",
+          "icon": "zap"
+        },
+        {
+          "title": "Components",
+          "path": "components",
+          "icon": "code"
+        },
+        {
+          "title": "Getting started",
+          "path": "getting-started",
+          "icon": "rocket"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</CodeGroup>
+
+Key details:
+
+- `path` matches the MDX filename without the `.mdx` extension.
+- Nested files use folder-style paths, such as `help-center/guides/setup-project`.
+- Icons are optional but help keep the sidebar consistent with other starter pages.
+
+If you later move or rename an MDX file, update the matching `path` value in `documentation.json` to keep routing and navigation aligned.
+
+## Connect or replace the API Reference
+
+The **API Reference** tab is driven by the `openapi.yaml` file at the repo root.
+
+- The **Sample Endpoints** group in `documentation.json` references `openapi.yaml`.
+- The sample spec defines a base URL (`https://api.example.com/v1`) and placeholder endpoints under `/projects` and `/documents`.
+- The [Authentication](/authentication) page explains how the sample uses a bearer token in the `Authorization` header.
+
+<Callout kind="info">
+
+Replace `openapi.yaml` with your real OpenAPI spec when you are ready, or remove the API Reference tab entirely if you do not expose an API. Do not ship the sample `api.example.com` endpoints to customers.
+
+</Callout>
+
+To wire your API:
+
+<Steps>
+
+<Step title="Update or replace openapi.yaml" icon="upload" titleType="p">
+
+- Open `openapi.yaml` and confirm it is an OpenAPI 3.x spec.
+- Replace the sample `servers` URL with your real API base URL.
+- Update or replace the `/projects`, `/documents`, and any other paths with your actual endpoints, request bodies, and responses.
+- Align auth settings with your real scheme so the [Authentication](/authentication) page stays accurate.
+
+After you push the change, the **Sample Endpoints** group in the API Reference tab will render your real paths and schemas.
+
+</Step>
+
+<Step title="Decide what to do with the sample group" icon="settings" titleType="p">
+
+- If you like the structure, keep the **Sample Endpoints** group but rename it in `documentation.json`.
+- If you do not need an API Reference, remove the group that references `openapi.yaml` from `documentation.json`:
+
+```json
+{
+  "tab": "API Reference",
+  "groups": [
+    {
+      "group": "Overview",
+      "pages": [
+        { "title": "Authentication", "path": "authentication" }
+      ]
+    }
+    // Remove the group that has "openapi": "openapi.yaml" to hide sample endpoints
+  ]
+}
+```
+
+- Save and redeploy. The navigation updates automatically.
+
+</Step>
+
+</Steps>
+
+## Where to go next
+
+Now you know how to edit content, add pages, and control the API Reference wiring. Use these pages to deepen your setup.
+
+<Columns cols={3}>
+
+<Card
+  title="Introduction"
+  href="/introduction"
+  icon="home"
+  cta="Review the overall setup"
+/>
+
+<Card
+  title="Quickstart"
+  href="/quickstart"
+  icon="zap"
+  cta="Customize your first sections"
+/>
+
+<Card
+  title="Components"
+  href="/components"
+  icon="code"
+  cta="See available MDX components"
+/>
+
+</Columns>
+
+<Columns cols={3}>
+
+<Card
+  title="Authentication sample"
+  href="/authentication"
+  icon="lock"
+  cta="Align with your real API auth"
+/>
+
+<Card
+  title="Help Center"
+  href="/help-center"
+  icon="help-circle"
+  cta="Explore FAQs and guides"
+/>
+
+<Card
+  title="Create your first help article"
+  href="/help-center/guides/setup-project"
+  icon="book-open"
+  cta="Follow a guided help-center example"
+/>
+
+</Columns>
