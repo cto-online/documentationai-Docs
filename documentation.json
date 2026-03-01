@@ -24,6 +24,11 @@
                 "icon": "home"
               },
               {
+                "title": "Architecture overview",
+                "path": "architecture-overview",
+                "icon": "layers"
+              },
+              {
                 "title": "Getting Started",
                 "path": "getting-started",
                 "icon": "rocket"
