@@ -1,54 +1,275 @@
 ---
-title: Core Concepts
-description: The basic building blocks of this starter kit.
+title: Core concepts
+description: Learn the core architectural concepts in GrantMaster engineering, including multi-tenancy, service layer patterns, events, APIs, and auth.
 ---
 
 ## Overview
 
-<Callout kind="alert">
-This page is an example. Replace every concept with the real terms your product uses.
+GrantMaster is built around a small set of architectural concepts that keep the system multi-tenant, auditable, and evolvable. Understanding these will help you navigate both backend and frontend codebases efficiently.
+
+<Callout kind="info">
+Use this page as a mental map. For more detailed diagrams and decisions, read the full [Architecture overview](/architecture-overview) and the [Authentication guide](/authentication).
 </Callout>
 
-## The building blocks
+## Core building blocks
+
+These are the main primitives you will see across the stack.
 
 <Columns cols={2}>
-  <Card title="Pages" icon="file-text">
-    Every page is an `.mdx` file. Content lives in the repo and is safe to edit.
+  <Card title="Multi-tenancy guardrails" icon="shield">
+    Every piece of data belongs to an organization, enforced through `organizationId` in Firestore paths, Security Rules, the service layer, and OrganizationContext.
   </Card>
-  <Card title="Navigation" icon="list">
-    Sidebar structure comes from `documentation.json`.
+  <Card title="Service layer (BaseService)" icon="settings">
+    Domain logic runs through service classes that extend BaseService, with Zod validation, audit logging, and consistency for CRUD operations.
   </Card>
-  <Card title="Components" icon="layout-grid">
-    Reusable blocks like Callouts, Steps, Tabs, and Cards keep pages consistent.
+  <Card title="EventBus and system events" icon="zap">
+    Domain events flow through an EventBus to decouple services. Critical events are persisted to the `systemEvents` collection for reliability and observability.
   </Card>
-  <Card title="API Reference" icon="code">
-    If you use it, the API tab reads from `openapi.yaml`.
+  <Card title="API surface (REST v1 + tRPC)" icon="code">
+    External clients integrate via REST under `/api/v1`. Internal app contracts use tRPC to share types and reduce drift between frontend and backend.
+  </Card>
+  <Card title="Authentication context" icon="lock">
+    Middleware resolves an AuthContext from Firebase ID tokens, API keys, or portal tokens, and passes it to handlers and services for authorization.
+  </Card>
+  <Card title="Shared language and glossary" icon="book-open">
+    Core terms such as organization, project, grant, and event are defined in the [Glossary](/glossary) and reused across services and APIs.
   </Card>
 </Columns>
 
-## Navigation shape (sample)
+## Multi-tenancy and organizationId
 
-```json
-{
-  "tab": "Documentation",
-  "groups": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        { "title": "Introduction", "path": "introduction" }
-      ]
-    }
-  ]
+Multi-tenancy ensures data from different organizations is always isolated. The key invariant is that **every tenant-scoped resource is tagged and accessed under an `organizationId`.**
+
+<Callout kind="alert">
+Never read or write tenant-scoped data without an `organizationId` in scope. If you do, you are bypassing part of the isolation model.
+</Callout>
+
+### Enforcement layers
+
+Multi-tenancy is enforced at multiple layers so mistakes are caught early:
+
+- **Firestore data model**  
+  Root collections that hold tenant data include `organizationId` in their path or document structure. Queries always include an `organizationId` filter.
+
+- **Firestore Security Rules**  
+  Rules verify that the authenticated user can only access documents under their `organizationId`. This prevents cross-tenant access even if a client crafts a wrong query.
+
+- **Service layer (BaseService)**  
+  Service methods accept an `organizationId` and enforce it on all reads and writes. They never trust the caller to inject arbitrary tenant IDs.
+
+- **OrganizationContext (backend + frontend)**  
+  Request middleware and frontend providers carry an `organizationId` through the call chain. Handlers and services consume it rather than reading from ad-hoc sources.
+
+### Example flow: tenant-scoped access
+
+<CodeGroup tabs="Route handler,Service method">
+
+```ts
+// Route handler (REST or tRPC) – simplified
+export const getGrantsHandler = async (ctx: AuthContext) => {
+  const organizationId = ctx.organizationId; // resolved by middleware
+
+  const grants = await grantService.listByOrganization({
+    organizationId,
+    actor: ctx.actor, // for audit
+  });
+
+  return grants;
+};
+```
+
+```ts
+// Service layer – simplified
+class GrantService extends BaseService {
+  async listByOrganization(input: { organizationId: string; actor: Actor }) {
+    const parsed = this.schemas.listByOrganization.parse(input);
+
+    // Always query with parsed.organizationId
+    const snapshot = await this.db
+      .collection("grants")
+      .where("organizationId", "==", parsed.organizationId)
+      .get();
+
+    return snapshot.docs.map((d) => d.data());
+  }
 }
 ```
 
-## How to adapt this page
+</CodeGroup>
+
+Success here means tenant isolation is enforced in both the handler and the service, regardless of how the handler was invoked.
+
+## Service layer and BaseService
+
+The service layer centralizes domain logic, validation, and auditing. Most features expose:
+
+- A **controller or route handler** (REST or tRPC)
+- A **service** extending `BaseService`
+- Optional **sub-services** for cross-cutting concerns
+
+### Zod validation
+
+Services use Zod schemas to validate inputs and protect Firestore from invalid writes.
+
+- Define schemas close to service methods.
+- Parse inputs at the edge of the service.
+- Treat a successful `parse` as the contract between calling code and persistence.
+
+```ts
+// Inside a service
+const createGrantSchema = z.object({
+  organizationId: z.string().min(1),
+  name: z.string().min(1),
+  amount: z.number().nonnegative(),
+});
+
+async createGrant(input: unknown) {
+  const parsed = createGrantSchema.parse(input);
+  // `parsed` is now trusted for persistence
+}
+```
+
+### Auditability
+
+`BaseService` provides helpers to record **who** did **what** and **when**:
+
+- Accept an `actor` (derived from AuthContext) in service calls.
+- Include `actor` details in audit logs and event payloads.
+- Use consistent audit fields across collections to ease debugging.
+
+<Callout kind="info">
+When adding a new write operation, ensure it records audit metadata and, if relevant, emits a domain event on the EventBus. This keeps timelines reconstructable.
+</Callout>
+
+## EventBus and system events
+
+The EventBus propagates domain events between services without tight coupling. For example, when a grant is created, a `grant.created` event can trigger downstream work such as notifications or compliance checks.
+
+### Decoupling via events
+
+- Producers publish events like `project.created` or `expense.submitted`.
+- Consumers subscribe to specific event types and perform follow-up work.
+- Services only depend on event contracts, not on each other's internals.
+
+### Persisting critical events
+
+Critical events are written to a Firestore collection such as `systemEvents`:
+
+- Provides an audit trail for investigations.
+- Allows replay and backfills when new consumers are added.
+- Helps observability dashboards and alerting.
+
+```ts
+// Pseudocode for publishing a critical event
+await eventBus.publish({
+  type: "grant.created",
+  organizationId,
+  payload: { grantId, name, amount },
+  critical: true, // signal that this must hit `systemEvents`
+});
+```
+
+If downstream processing fails, the event record in `systemEvents` is the source of truth for retries.
+
+## API surface: REST v1 and tRPC
+
+GrantMaster exposes two primary API surfaces: an external REST API and an internal tRPC layer.
+
+### REST v1 under /api/v1
+
+Public HTTP endpoints live under `/api/v1` and are implemented using a router (for example, Hono).
+
+- `GET /api/v1/health` is unauthenticated and returns basic health information.
+- Authenticated CRUD endpoints exist for core resources such as **projects, grants, compliance items, employees, expenses, journals**, and similar objects.
+- Routes resolve AuthContext, derive `organizationId`, and delegate to services.
+
+<Callout kind="alert">
+Do not put new public endpoints outside `/api/v1`. Keep the surface consistent and versioned to avoid breaking external consumers.
+</Callout>
+
+### tRPC for internal contracts
+
+The frontend app calls backend procedures via tRPC:
+
+- Shared types between frontend and backend reduce drift.
+- Procedures still use the same service layer and AuthContext patterns.
+- Organization scoping is applied in the same way as for REST handlers.
+
+When you add a new feature, prefer:
+
+1. A service method in the appropriate domain service.
+2. A tRPC procedure for internal usage.
+3. A REST v1 endpoint only if there is an external integration need.
+
+## Authentication and AuthContext
+
+All request handlers rely on a unified **AuthContext** resolved by middleware. This context is the single source of truth for **who** is calling and what they can access.
+
+Read the full [Authentication guide](/authentication) for details; this section summarizes the core concepts.
+
+### Supported credential types
+
+AuthContext recognizes three types of credentials:
+
+- **Firebase ID token (Authorization: Bearer)**  
+  - Used by the main web app and authenticated users.  
+  - Middleware verifies the token and derives a user identity and allowed organizations.
+
+- **API key (X-API-Key)**  
+  - Used by server-to-server integrations.  
+  - Keys are associated with an organization and a permission scope.
+
+- **Portal tokens (portalTokens collection)**  
+  - Used for limited-scope portals (for example, an external reviewer link).  
+  - Tokens carry narrow permissions and often a specific resource scope.
+
+### From middleware to service
+
+The auth middleware runs before handlers and produces an AuthContext:
+
+```ts
+// Simplified middleware flow
+const authenticate = async (request: Request): Promise<AuthContext> => {
+  // 1. Try Firebase ID token from Authorization header
+  // 2. Fall back to API key from X-API-Key
+  // 3. Fall back to portal token lookup
+  // 4. Derive actor, organizationId, and permission set
+};
+```
+
+Handlers receive this AuthContext and pass it into services:
+
+```ts
+export const createExpenseHandler = async (ctx: AuthContext, input: unknown) => {
+  const expense = await expenseService.create({
+    ...input,
+    organizationId: ctx.organizationId,
+    actor: ctx.actor,
+  });
+
+  return expense;
+};
+```
+
+Success here means:
+
+- Only one place (middleware) deals with credential formats.
+- Handlers and services depend on **AuthContext**, not raw headers.
+- Authorization decisions can be centralized or shared via helpers.
+
+## How to apply these concepts
 
 <Steps>
-  <Step title="Replace the terms" icon="edit">
-    Swap "Pages" and "Components" for your real domain language.
+  <Step title="Start from AuthContext and organizationId" icon="target">
+    Whenever you add a handler or service method, accept AuthContext from the caller, extract `organizationId`, and thread it through to the service and any queries.
   </Step>
-  <Step title="Add your concepts" icon="plus">
-    Create a section for the ideas your users must learn first.
+  <Step title="Use the service layer as the integration point" icon="settings">
+    Put validation, authorization checks, and audit logging in the service. Controllers (REST or tRPC) should be thin shims that translate transport to service calls.
+  </Step>
+  <Step title="Emit and persist domain events" icon="zap">
+    When a change has downstream impact, publish an event on the EventBus. Mark critical ones so they are written to `systemEvents` for replay and debugging.
+  </Step>
+  <Step title="Align with shared language" icon="book-open">
+    Before naming a new concept or field, check the [Glossary](/glossary) and [Architecture overview](/architecture-overview) to reuse existing terms and patterns.
   </Step>
 </Steps>

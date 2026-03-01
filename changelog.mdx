@@ -1,22 +1,52 @@
 ---
-title: Sample Changelog
-description: Sample release notes you can replace with your real updates.
+title: GrantMaster changelog
+description: Track product and platform changes in GrantMaster that affect engineering, operations, and integrations.
 ---
 
-## Sample updates
+## GrantMaster release history
 
-<Callout kind="alert">
-This changelog is example content. Replace every entry with your real releases.
+GrantMaster uses this changelog to record product and platform changes that matter to engineering and operations teams, including API behavior, data model updates, and integration-impacting fixes.
+
+<Callout kind="info">
+The changelog has not yet been backfilled with historical GrantMaster releases. New entries will appear here as releases ship.
 </Callout>
 
-<Update label="2026-01-26" description="Sample Update" tags={["sample"]}>
-## What changed
-- Cleaned up placeholder copy across the starter kit.
-- Added clearer "sample" messaging to avoid confusion.
-</Update>
+## What appears in this changelog
 
-<Update label="2025-12-10" description="Sample Update" tags={["sample"]}>
-## What changed
-- Simplified the Quickstart steps.
-- Trimmed Help Center examples.
+Engineering and ops teams rely on this page to understand when and how GrantMaster changed.
+
+Typical entries include:
+
+- API changes that affect request or response formats
+- Database or schema changes that impact data pipelines
+- Deployment, infrastructure, and performance changes
+- Security, authentication, and permission updates
+- Integration-impacting bug fixes or behavior changes
+
+## How to add an entry
+
+Add one `<Update>` component per release and group changes under clear headings such as "New", "Changed", and "Fixed".
+
+<CodeGroup tabs="Release template">
+
+```md
+<Update
+  label="YYYY-MM-DD"
+  description="vX.Y.Z"
+  tags={["feature", "bugfix"]}
+>
+## New
+- Short, action-focused bullet that explains the new capability and who it affects.
+
+## Changed
+- Describe behavior changes, migrations, or config updates engineers must make.
+
+## Fixed
+- Note bugs that affected production flows, data integrity, or reliability.
+
 </Update>
+```
+
+</CodeGroup>
+
+When you add real releases, place the newest `<Update>` at the top of the file so the most recent changes are easiest to find.

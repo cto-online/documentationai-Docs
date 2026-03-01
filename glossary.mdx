@@ -25,6 +25,10 @@ Keep these term names and meanings consistent across code, UI, API contracts, an
 
 **Admin** — A tenant-scoped user with elevated permissions within a single organization. Admins manage users, roles, and configuration only for their own tenant.
 
+**Role** — A named collection of permissions that you assign to a user within a tenant. Roles drive RBAC decisions in APIs and agents and are evaluated in the auth middleware.
+
+**Permission** — A granular capability flag (for example, `pursuit.read` or `agent.run`) that controls access to specific operations. Permissions roll up into roles and are checked by RBAC.
+
 </Tab>
 
 <Tab title="Extensions and grants" icon="folder">
@@ -81,13 +85,23 @@ Keep these term names and meanings consistent across code, UI, API contracts, an
 
 **EventBus** — The messaging backbone that decouples services by emitting and consuming events. Services publish domain events and subscribe to them instead of calling each other directly.
 
+**systemEvents** — A Firestore collection that stores selected EventBus events for auditability and replay. Critical domain events are persisted here so you can reconstruct timelines or re-drive processing.
+
 **BaseService** — A common service base class that centralizes logging, error handling, and event emission patterns for backend services.
 
 **Impersonation** — A SuperAdmin troubleshooting capability that allows acting as a tenant user to reproduce issues, without breaking tenant isolation guarantees.
 
 **tRPC** — The type-safe remote procedure call layer used together with Cloud Functions. tRPC defines contracts between frontend and backend and enforces typed requests and responses.
 
+**AuthContext** — The typed authentication and authorization context built by the auth middleware in `functions/src/api/middleware/authenticate.ts`. AuthContext captures the caller identity (Firebase user, API key, or portal token), tenant, and effective roles and permissions that downstream handlers use for RBAC.
+
+**API Key** — A hashed credential stored in the `apiKeys` collection and validated by the auth middleware in `functions/src/api/middleware/authenticate.ts`. Clients pass API keys in the `X-API-Key` header, and associated scopes or permissions determine what REST v1 routes they can call.
+
 **Portal Token** — A time- and scope-bound credential that grants limited read access to selected resources (for example, for external reviewers), typically persisted in a `portalTokens` store.
+
+**REST v1 API** — The primary HTTP API surface exposed under the `/api/v1` prefix, implemented by the v1 router in `functions/src/api/rest/v1.ts`. REST v1 includes health checks and resource CRUD endpoints and uses AuthContext and RBAC to secure routes.
+
+**Hono Router** — The lightweight routing layer used by the REST v1 API in `functions/src/api/rest/v1.ts`. Hono defines route handlers such as `GET /api/v1/health` and wires them to shared middleware, including authentication and authorization.
 
 **Grantor Portal** — An external-facing interface for grantors or reviewers. Grantor portals allow non-tenant users to review, score, or manage submissions without full tenant access.
 

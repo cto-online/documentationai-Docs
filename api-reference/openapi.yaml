@@ -1,0 +1,928 @@
+openapi: 3.0.3
+info:
+  title: GrantMaster REST API
+  version: 1.0.0
+  description: |
+    GrantMaster REST API v1.
+
+    ## Getting Started
+
+    Use this API to monitor service health and manage projects. All endpoints are prefixed with `/api/v1`.
+
+    ## Authentication
+
+    Most endpoints require authentication. The following mechanisms are supported:
+
+    - **Bearer token (Authorization header)**  
+      - Firebase ID token  
+      - Portal token  
+      - Format: `Authorization: Bearer <token>`
+
+    - **API key (header)**  
+      - Header: `X-API-Key: <api-key>`
+
+    - **Portal token (query parameter, optional)**  
+      - Query: `?token=<portal-token>`
+
+    The health endpoint does not require authentication.
+
+    ## Response Envelope
+
+    All responses follow a common envelope:
+
+    - On success:
+      ```json
+      {
+        "success": true,
+        "data": { ... }
+      }
+      ```
+    - On error:
+      ```json
+      {
+        "success": false,
+        "error": {
+          "code": "string",
+          "message": "Human-readable error message"
+        }
+      }
+      ```
+
+    The `data` shape depends on the endpoint.
+
+servers:
+  - url: https://{host}
+    description: GrantMaster API server
+    variables:
+      host:
+        description: API host name (e.g. api.grantmaster.com)
+        default: api.grantmaster.com
+tags:
+  - name: Health
+    description: Service health and status checks.
+  - name: Projects
+    description: Operations for managing projects.
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - Health
+      operationId: getHealthStatus
+      description: Returns the API health status and version information.
+      security: []
+      responses:
+        '200':
+          description: Health status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                success: true
+                data:
+                  status: ok
+                  timestamp: '2024-01-01T12:00:00.000Z'
+                  version: '1.0.0'
+  /api/v1/projects:
+    get:
+      tags:
+        - Projects
+      operationId: listProjects
+      description: Retrieves a paginated list of projects.
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+        - QueryTokenAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Optional project status filter.
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (1-based).
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            example: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page (maximum 100).
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            example: 20
+        - name: sortBy
+          in: query
+          description: Field to sort by.
+          required: false
+          schema:
+            type: string
+            example: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort order direction.
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: desc
+      responses:
+        '200':
+          description: List of projects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsListResponse'
+              example:
+                success: true
+                data:
+                  items:
+                    - id: 'proj_123'
+                      organizationId: 'org_1'
+                      name: Community Outreach Program
+                      description: Outreach initiative for local community.
+                      status: active
+                      phase: planning
+                      startDate: '2024-01-01'
+                      endDate: '2024-12-31'
+                      budget: 100000
+                      grantId: 'grant_456'
+                      managerId: 'user_789'
+                      managerName: Jane Doe
+                      teamMemberIds:
+                        - user_111
+                        - user_222
+                      tags:
+                        - community
+                        - outreach
+                      createdAt: '2024-01-01T10:00:00.000Z'
+                      updatedAt: '2024-01-10T12:00:00.000Z'
+                      createdBy: 'user_789'
+                      updatedBy: 'user_789'
+                    - id: 'proj_124'
+                      organizationId: 'org_1'
+                      name: Education Grant Initiative
+                      status: draft
+                      createdAt: '2024-02-01T08:00:00.000Z'
+                      updatedAt: '2024-02-01T08:00:00.000Z'
+                      createdBy: 'user_100'
+                      updatedBy: 'user_100'
+                  total: 2
+                  page: 1
+                  pageSize: 20
+                  hasMore: false
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    post:
+      tags:
+        - Projects
+      operationId: createProject
+      description: Creates a new project.
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+        - QueryTokenAuth: []
+      requestBody:
+        description: Project data to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreateInput'
+            example:
+              organizationId: 'org_1'
+              name: New Project
+              description: Description of the new project.
+              status: draft
+              phase: ideation
+              startDate: '2024-03-01'
+              endDate: '2024-09-30'
+              budget: 50000
+              grantId: 'grant_900'
+              managerId: 'user_500'
+              managerName: John Smith
+              teamMemberIds:
+                - user_501
+                - user_502
+              tags:
+                - education
+                - grant
+      responses:
+        '201':
+          description: Project created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+              example:
+                success: true
+                data:
+                  id: 'proj_200'
+                  organizationId: 'org_1'
+                  name: New Project
+                  description: Description of the new project.
+                  status: draft
+                  phase: ideation
+                  startDate: '2024-03-01'
+                  endDate: '2024-09-30'
+                  budget: 50000
+                  grantId: 'grant_900'
+                  managerId: 'user_500'
+                  managerName: John Smith
+                  teamMemberIds:
+                    - user_501
+                    - user_502
+                  tags:
+                    - education
+                    - grant
+                  createdAt: '2024-03-01T10:00:00.000Z'
+                  updatedAt: '2024-03-01T10:00:00.000Z'
+                  createdBy: 'user_500'
+                  updatedBy: 'user_500'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /api/v1/projects/{id}:
+    get:
+      tags:
+        - Projects
+      operationId: getProjectById
+      description: Retrieves a project by its unique identifier.
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+        - QueryTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Unique project identifier.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectWithBudgetUtilizationResponse'
+              example:
+                success: true
+                data:
+                  id: 'proj_123'
+                  organizationId: 'org_1'
+                  name: Community Outreach Program
+                  description: Outreach initiative for local community.
+                  status: active
+                  phase: execution
+                  startDate: '2024-01-01'
+                  endDate: '2024-12-31'
+                  budget: 100000
+                  budgetUtilization: 42.5
+                  grantId: 'grant_456'
+                  managerId: 'user_789'
+                  managerName: Jane Doe
+                  teamMemberIds:
+                    - user_111
+                    - user_222
+                  tags:
+                    - community
+                    - outreach
+                  createdAt: '2024-01-01T10:00:00.000Z'
+                  updatedAt: '2024-01-15T09:00:00.000Z'
+                  createdBy: 'user_789'
+                  updatedBy: 'user_800'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags:
+        - Projects
+      operationId: updateProject
+      description: Updates an existing project by its unique identifier.
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+        - QueryTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Unique project identifier.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Fields to update on the project.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdateInput'
+            example:
+              name: Updated Project Name
+              description: Updated description.
+              status: active
+              phase: execution
+              endDate: '2024-10-01'
+              budget: 120000
+              managerId: 'user_600'
+              managerName: Alice Johnson
+              teamMemberIds:
+                - user_111
+                - user_333
+              tags:
+                - updated
+                - outreach
+      responses:
+        '200':
+          description: Project updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+              example:
+                success: true
+                data:
+                  id: 'proj_123'
+                  organizationId: 'org_1'
+                  name: Updated Project Name
+                  description: Updated description.
+                  status: active
+                  phase: execution
+                  startDate: '2024-01-01'
+                  endDate: '2024-10-01'
+                  budget: 120000
+                  grantId: 'grant_456'
+                  managerId: 'user_600'
+                  managerName: Alice Johnson
+                  teamMemberIds:
+                    - user_111
+                    - user_333
+                  tags:
+                    - updated
+                    - outreach
+                  createdAt: '2024-01-01T10:00:00.000Z'
+                  updatedAt: '2024-03-01T09:00:00.000Z'
+                  createdBy: 'user_789'
+                  updatedBy: 'user_600'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags:
+        - Projects
+      operationId: deleteProject
+      description: Deletes a project by its unique identifier.
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+        - QueryTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Unique project identifier.
+          required: true
+          schema:
+            type: string
+        - name: hard
+          in: query
+          description: When true, perform a hard delete; otherwise perform a soft delete if supported.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '204':
+          description: Project deleted successfully. No content is returned on success.
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token or portal token passed via the Authorization header as a Bearer token.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key used to authenticate requests.
+    QueryTokenAuth:
+      type: apiKey
+      in: query
+      name: token
+      description: Optional portal token passed as a query parameter.
+  schemas:
+    ErrorObject:
+      type: object
+      description: Error information returned when a request fails.
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code.
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message.
+          example: One or more fields are invalid.
+      required:
+        - code
+        - message
+    ErrorResponse:
+      type: object
+      description: Standard error response envelope.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was not successful.
+          example: false
+        error:
+          $ref: '#/components/schemas/ErrorObject'
+      required:
+        - success
+        - error
+    HealthData:
+      type: object
+      description: Health status payload.
+      properties:
+        status:
+          type: string
+          description: Health status indicator.
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp of the health check.
+          example: '2024-01-01T12:00:00.000Z'
+        version:
+          type: string
+          description: API version.
+          example: '1.0.0'
+      required:
+        - status
+        - timestamp
+        - version
+    HealthResponse:
+      type: object
+      description: Health endpoint response envelope.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was successful.
+          example: true
+        data:
+          $ref: '#/components/schemas/HealthData'
+      required:
+        - success
+        - data
+      example:
+        success: true
+        data:
+          status: ok
+          timestamp: '2024-01-01T12:00:00.000Z'
+          version: '1.0.0'
+    ProjectDocument:
+      type: object
+      description: Project document as stored on the server.
+      properties:
+        id:
+          type: string
+          description: Unique project identifier.
+          example: proj_123
+        organizationId:
+          type: string
+          description: Identifier of the organization that owns the project.
+          example: org_1
+        name:
+          type: string
+          description: Project name.
+          example: Community Outreach Program
+        description:
+          type: string
+          description: Optional project description.
+          example: Outreach initiative for local community.
+        status:
+          type: string
+          description: Current status of the project.
+          example: active
+        phase:
+          type: string
+          description: Optional lifecycle phase of the project.
+          example: planning
+        startDate:
+          type: string
+          format: date
+          description: Optional project start date.
+          example: '2024-01-01'
+        endDate:
+          type: string
+          format: date
+          description: Optional project end date.
+          example: '2024-12-31'
+        budget:
+          type: number
+          format: double
+          description: Optional budget allocated to the project.
+          example: 100000
+        grantId:
+          type: string
+          description: Optional identifier of the associated grant.
+          example: grant_456
+        managerId:
+          type: string
+          description: Optional identifier of the project manager.
+          example: user_789
+        managerName:
+          type: string
+          description: Optional name of the project manager.
+          example: Jane Doe
+        teamMemberIds:
+          type: array
+          description: Optional list of team member identifiers.
+          items:
+            type: string
+          example:
+            - user_111
+            - user_222
+        tags:
+          type: array
+          description: Optional list of tags associated with the project.
+          items:
+            type: string
+          example:
+            - community
+            - outreach
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the project was created.
+          example: '2024-01-01T10:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the project was last updated.
+          example: '2024-01-10T12:00:00.000Z'
+        createdBy:
+          type: string
+          description: Identifier of the user who created the project.
+          example: user_789
+        updatedBy:
+          type: string
+          description: Identifier of the user who last updated the project.
+          example: user_789
+      required:
+        - id
+        - organizationId
+        - name
+        - status
+        - createdAt
+        - updatedAt
+        - createdBy
+        - updatedBy
+    ProjectWithBudgetUtilization:
+      allOf:
+        - $ref: '#/components/schemas/ProjectDocument'
+        - type: object
+          description: Project document including optional budget utilization when budget is present.
+          properties:
+            budgetUtilization:
+              type: number
+              format: double
+              description: Percentage of the budget that has been utilized. Only present when a budget is defined.
+              example: 42.5
+    ProjectCreateInput:
+      type: object
+      description: Fields required to create a new project.
+      properties:
+        organizationId:
+          type: string
+          description: Identifier of the organization that owns the project.
+          example: org_1
+        name:
+          type: string
+          description: Project name.
+          example: Community Outreach Program
+        description:
+          type: string
+          description: Optional project description.
+          example: Outreach initiative for local community.
+        status:
+          type: string
+          description: Initial status of the project.
+          example: draft
+        phase:
+          type: string
+          description: Optional lifecycle phase of the project.
+          example: ideation
+        startDate:
+          type: string
+          format: date
+          description: Optional project start date.
+          example: '2024-01-01'
+        endDate:
+          type: string
+          format: date
+          description: Optional project end date.
+          example: '2024-12-31'
+        budget:
+          type: number
+          format: double
+          description: Optional budget allocated to the project.
+          example: 100000
+        grantId:
+          type: string
+          description: Optional identifier of the associated grant.
+          example: grant_456
+        managerId:
+          type: string
+          description: Optional identifier of the project manager.
+          example: user_789
+        managerName:
+          type: string
+          description: Optional name of the project manager.
+          example: Jane Doe
+        teamMemberIds:
+          type: array
+          description: Optional list of team member identifiers.
+          items:
+            type: string
+          example:
+            - user_111
+            - user_222
+        tags:
+          type: array
+          description: Optional list of tags associated with the project.
+          items:
+            type: string
+          example:
+            - community
+            - outreach
+      required:
+        - organizationId
+        - name
+        - status
+    ProjectUpdateInput:
+      type: object
+      description: Fields that can be updated on an existing project.
+      properties:
+        name:
+          type: string
+          description: Project name.
+          example: Community Outreach Program
+        description:
+          type: string
+          description: Optional project description.
+          example: Outreach initiative for local community.
+        status:
+          type: string
+          description: Current status of the project.
+          example: active
+        phase:
+          type: string
+          description: Optional lifecycle phase of the project.
+          example: execution
+        startDate:
+          type: string
+          format: date
+          description: Optional project start date.
+          example: '2024-01-01'
+        endDate:
+          type: string
+          format: date
+          description: Optional project end date.
+          example: '2024-12-31'
+        budget:
+          type: number
+          format: double
+          description: Optional budget allocated to the project.
+          example: 120000
+        grantId:
+          type: string
+          description: Optional identifier of the associated grant.
+          example: grant_456
+        managerId:
+          type: string
+          description: Optional identifier of the project manager.
+          example: user_600
+        managerName:
+          type: string
+          description: Optional name of the project manager.
+          example: Alice Johnson
+        teamMemberIds:
+          type: array
+          description: Optional list of team member identifiers.
+          items:
+            type: string
+          example:
+            - user_111
+            - user_333
+        tags:
+          type: array
+          description: Optional list of tags associated with the project.
+          items:
+            type: string
+          example:
+            - updated
+            - outreach
+    PaginatedResultProjectDocument:
+      type: object
+      description: Paginated result set of project documents.
+      properties:
+        items:
+          type: array
+          description: List of project documents for the current page.
+          items:
+            $ref: '#/components/schemas/ProjectDocument'
+        total:
+          type: integer
+          format: int32
+          description: Total number of items available.
+          example: 42
+        page:
+          type: integer
+          format: int32
+          description: Current page number (1-based).
+          example: 1
+        pageSize:
+          type: integer
+          format: int32
+          description: Number of items per page.
+          example: 20
+        hasMore:
+          type: boolean
+          description: Indicates if there are more pages available.
+          example: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - hasMore
+    ProjectsListResponse:
+      type: object
+      description: Response envelope for a list of projects.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was successful.
+          example: true
+        data:
+          $ref: '#/components/schemas/PaginatedResultProjectDocument'
+      required:
+        - success
+        - data
+    ProjectResponse:
+      type: object
+      description: Response envelope containing a single project document.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was successful.
+          example: true
+        data:
+          $ref: '#/components/schemas/ProjectDocument'
+      required:
+        - success
+        - data
+    ProjectWithBudgetUtilizationResponse:
+      type: object
+      description: Response envelope containing a single project document, possibly including budget utilization.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was successful.
+          example: true
+        data:
+          $ref: '#/components/schemas/ProjectWithBudgetUtilization'
+      required:
+        - success
+        - data
+  responses:
+    BadRequestResponse:
+      description: The request was invalid or cannot be otherwise served.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: BAD_REQUEST
+              message: The request parameters are invalid.
+    UnauthorizedResponse:
+      description: Authentication credentials are missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: Authentication is required to access this resource.
+    ForbiddenResponse:
+      description: The authenticated user does not have permission to access the requested resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: FORBIDDEN
+              message: You do not have permission to perform this action.
+    NotFoundResponse:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: The requested resource does not exist.
+    ConflictResponse:
+      description: The request could not be completed due to a conflict with the current state of the target resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: CONFLICT
+              message: A resource with the given identifier already exists.
+    UnprocessableEntityResponse:
+      description: The request was well-formed but was unable to be followed due to semantic errors.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: UNPROCESSABLE_ENTITY
+              message: One or more fields contain semantic validation errors.
+    InternalServerErrorResponse:
+      description: An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: An unexpected error occurred. Please try again later.

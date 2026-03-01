@@ -1,57 +1,174 @@
 ---
-title: Authentication (Sample)
-description: Sample guidance for authentication and OpenAPI usage.
+title: Authentication
+description: Authenticate with the GrantMaster REST API using Firebase ID tokens, API keys, or portal tokens, with RBAC and endpoint access rules.
 ---
 
 ## Overview
 
-This is sample content. Replace tokens, URLs, headers, and flows with your real authentication requirements.
+GrantMaster secures almost all REST API endpoints under `/api/v1/*` with a unified authentication middleware that supports three methods:
+
+- Firebase Auth ID tokens in the `Authorization` header
+- API keys in the `X-API-Key` header
+- Portal tokens for read-only portal access
+
+Permissions are enforced with Firestore role-based access control (RBAC) for the resolved organization context. Each authenticated request runs with the roles and permissions associated with that organization.
 
 <Callout kind="info">
 
-This site ships with placeholder content for authentication. Update this page and `openapi.yaml` to match your real API before sharing with users.
+The only unauthenticated endpoint is the health check: `GET /api/v1/health`. All other REST endpoints require one of the supported authentication methods and sufficient permissions.
 
 </Callout>
 
-This API uses OpenAPI to describe endpoints, parameters, and responses. The reference is generated from `openapi.yaml`, so keep that file up to date as your API evolves.
+## Supported authentication methods
 
-## Authentication
+### 1. Firebase Auth ID token (Authorization bearer)
 
-Use a bearer token in the `Authorization` header for authenticated requests. Replace the base URL and token with values for your own API.
+Use a Firebase Auth ID token when you call the API on behalf of an authenticated user in your application.
+
+Send the ID token from Firebase Auth in the `Authorization` header using the `Bearer` scheme.
+
+<CodeGroup tabs="curl">
 
 ```bash
-curl https://api.example.com/v1/example \
-  -H "Authorization: Bearer YOUR_TOKEN"
+curl "<YOUR_BASE_URL>/api/v1/projects" \
+  -H "Authorization: Bearer <FIREBASE_ID_TOKEN>"
 ```
 
+</CodeGroup>
+
 <ParamField header="Authorization" param-type="string" required="true">
-  `Bearer YOUR_TOKEN`
+
+`Bearer <firebase-id-token>` — a Firebase Auth ID token for the current user. The middleware verifies this token with Firebase Admin `verifyIdToken` before allowing access.
+
 </ParamField>
 
-## Keep OpenAPI in sync
+When you authenticate with an ID token:
 
-Define your authentication and base settings in `openapi.yaml` so the API Reference stays accurate and consistent.
+- The middleware verifies the token signature and expiry with Firebase Admin.
+- The user and organization context are derived from the decoded token and Firestore.
+- RBAC permissions for that organization's roles determine which endpoints and resources the user can access.
 
-At a minimum, you should:
+<Callout kind="alert">
 
-- Define one or more security schemes that describe how clients authenticate (for example, bearer token, API key in a header, or other scheme).
-- Reference those security schemes on operations that require authentication so they are clearly marked as secured.
-- Set the correct base URL and any required global headers (for example, versioning or tenant headers) so example requests are copy-pasteable.
+Ensure that you send a **Firebase Auth ID token**, not a refresh token or custom token. ID tokens expire; refresh or re-authenticate your user when you receive `401 Unauthorized` due to token expiry.
 
-When your real authentication flow changes (for example, new header names, token formats, or additional requirements), update `openapi.yaml`. The generated API Reference will then reflect your current auth model without needing to edit each endpoint page by hand.
+</Callout>
 
-## Using the API reference
+### 2. API key (X-API-Key)
 
-Use the API Reference to explore endpoints, required parameters, and example responses. When you change authentication headers or base URLs, update `openapi.yaml` so the generated reference matches what your clients should use.
+Use an API key for server-to-server integrations where you do not have an end-user context. API keys are stored in the `apiKeys` collection and validated by hashing (SHA-256) the incoming key and looking up the stored record.
 
-## Common mistakes
+Send the key in the `X-API-Key` header.
 
-<Expandable title="Why am I getting a 401?" default-open="false">
+<CodeGroup tabs="curl">
+
+```bash
+curl "<YOUR_BASE_URL>/api/v1/projects" \
+  -H "X-API-Key: <API_KEY>"
+```
+
+</CodeGroup>
+
+<ParamField header="X-API-Key" param-type="string" required="true">
+
+A secret API key value, often prefixed with `gm_live_` for production or `gm_test_` for testing. The middleware hashes this value and looks it up in the `apiKeys` collection, enforcing any configured scopes, restrictions, or organization bindings.
+
+</ParamField>
+
+Key characteristics of API key auth:
+
+- Keys may be scoped to specific organizations and permissions.
+- Keys can be restricted to certain operations or resources via scopes/permissions in Firestore.
+- Keys are suitable for backend jobs, cron tasks, and integrations that do not rely on a user session.
+
+<Callout kind="alert">
+
+Treat API keys like passwords. Do not embed them in client-side code or mobile apps, and do not share them in logs or error messages. Rotate compromised keys in the `apiKeys` collection and your secret store.
+
+</Callout>
+
+### 3. Portal token (limited read-only access)
+
+Portal tokens provide restricted, typically read-only access for portal-style use cases, such as embedding reports or exposing a limited subset of data.
+
+The middleware recognizes portal tokens:
+
+- As a bearer token in the `Authorization` header (for example, `Bearer portal_...`), or
+- As a query parameter token (for example, `?token=portal_...`), depending on how you configure access.
+
+Portal tokens are stored in the `portalTokens` collection and map to a constrained set of permissions such as `VIEW_PROJECTS` or `VIEW_REPORTS`.
+
+<CodeGroup tabs="curl">
+
+```bash
+curl "<YOUR_BASE_URL>/api/v1/reports/summary" \
+  -H "Authorization: Bearer <PORTAL_TOKEN>"
+```
+
+</CodeGroup>
+
+<ParamField header="Authorization" param-type="string" required="true">
+
+`Bearer portal_<...>` — a portal token looked up in the `portalTokens` collection. The associated permissions are intentionally limited (for example, `VIEW_PROJECTS`, `VIEW_REPORTS`) and typically read-only.
+
+</ParamField>
+
+<ParamField query="token" param-type="string" required="false">
+
+Optional query-style portal token (`portal_<...>`) for URLs that accept portal access via query parameters. The middleware resolves these tokens from the `portalTokens` collection with the same limited permissions.
+
+</ParamField>
+
+Portal tokens always run under a narrowed permission set and organization scope, making them appropriate for sharing limited access with external stakeholders without granting full API capabilities.
+
+## Permissions and organization scoping
+
+After authentication, the middleware determines which organization the request belongs to and loads roles and permissions for that organization from Firestore. All subsequent authorization decisions happen within this scoped context.
+
+Key points:
+
+- Each resolved principal (user, API key, or portal token) is associated with one or more organizations.
+- Roles and permissions for that organization are fetched from Firestore.
+- Every secured route under `/api/v1/*` checks these permissions before performing the requested operation.
+
+If a caller is authenticated but lacks the required permission, the API returns an authorization error even though the token or key itself is valid.
+
+## Unauthenticated health endpoint
+
+The REST API exposes an unauthenticated health check for monitoring and uptime probes:
+
+```bash
+curl "<YOUR_BASE_URL>/api/v1/health"
+```
+
+Use this endpoint for liveness and readiness checks in infrastructure tooling. All other `/api/v1/*` endpoints go through the authentication middleware and require one of the supported auth methods.
+
+## Troubleshooting authentication
+
+<Expandable title="Why am I getting 401 Unauthorized?" default-open="false">
 
 Verify that:
 
-- The token is valid and not expired.
-- The token is sent in the `Authorization` header.
-- The header value includes the `Bearer` prefix and a space before the token.
+- The token or API key has not expired, been revoked, or been deleted from Firestore.
+- You are sending **exactly one** authentication method (ID token, API key, or portal token) per request.
+- The header name is correct: `Authorization` for bearer tokens, `X-API-Key` for API keys.
+- The bearer header value includes the `Bearer` prefix, a space, and the token.
+- The API key includes the full value (including `gm_live_` or `gm_test_` prefix if present) with no truncation or extra whitespace.
+
+If these checks pass and you still receive `401`, confirm that the hash of your API key or portal token exists in the corresponding Firestore collection and that the Firebase ID token is issued for the expected Firebase project.
+
+</Expandable>
+
+<Expandable title="Why am I getting 403 Forbidden?" default-open="false">
+
+A `403` response indicates that authentication succeeded but the resolved principal lacks permission for the requested operation.
+
+Check that:
+
+- The user, API key, or portal token is associated with the correct organization.
+- The roles for that organization in Firestore include the permission required by the endpoint (for example, `VIEW_REPORTS`, `MANAGE_PROJECTS`).
+- You are not using a portal token for an operation that requires write or admin permissions.
+
+Update the organization's roles and permissions in Firestore or switch to a principal (user or API key) that has the necessary access.
 
 </Expandable>
