@@ -1,0 +1,339 @@
+---
+title: Set up your local environment
+description: Configure your GrantMaster development environment with prerequisites, env files, Firebase emulators, and local run commands.
+---
+
+## Overview
+
+Bring up GrantMaster locally with Firebase emulators, seeded data, and the Vite dev server so you can start shipping changes quickly.
+
+<Callout kind="info">
+
+This guide is for engineers working directly in the GrantMaster repo. You will install global tooling, configure env files, and run the full local stack.
+
+</Callout>
+
+## Prerequisites
+
+Install and verify the core tools GrantMaster relies on for local development.
+
+<Steps>
+
+<Step title="Install Node.js v20 or later" icon="terminal">
+
+GrantMaster uses npm workspaces and targets Node.js v20+ in `package.json` engines.
+
+<CodeGroup tabs="bash">
+
+```bash
+# Check your Node.js version
+node -v
+
+# If needed, install Node.js 20+ using your preferred manager (nvm, asdf, etc.)
+nvm install 20
+nvm use 20
+```
+
+</CodeGroup>
+
+Your Node.js version output should start with `v20`.
+
+</Step>
+
+<Step title="Install the Firebase CLI" icon="terminal">
+
+Install the Firebase CLI globally to run the local emulators and deploy functions.
+
+<CodeGroup tabs="bash">
+
+```bash
+# Install Firebase CLI globally
+npm install -g firebase-tools
+
+# Verify installation
+firebase --version
+```
+
+</CodeGroup>
+
+You should see a Firebase CLI version print to your terminal.
+
+</Step>
+
+<Step title="Install Java JRE 11+ for emulators" icon="terminal">
+
+The Firebase Emulators require Java. Install Java JRE 11 or later using your OS package manager.
+
+<CodeGroup tabs="bash">
+
+```bash
+# Example: macOS with Homebrew
+brew install --cask temurin11
+
+# Example: Debian/Ubuntu
+sudo apt-get update
+sudo apt-get install default-jre
+
+# Verify Java
+java -version
+```
+
+</CodeGroup>
+
+Confirm that `java -version` reports a Java 11+ runtime.
+
+</Step>
+
+<Step title="Install workspace dependencies" icon="package">
+
+GrantMaster uses npm workspaces with packages in `packages/*` and Cloud Functions in `functions`.
+
+<CodeGroup tabs="bash">
+
+```bash
+# From the repo root
+npm install
+```
+
+</CodeGroup>
+
+This installs dependencies for all workspaces so the app and functions can run together.
+
+</Step>
+
+</Steps>
+
+## Configure environment variables
+
+Copy the example env file and set the variables used by the Vite front-end.
+
+<Steps>
+
+<Step title="Create .env.local from .env.example" icon="edit">
+
+Start by copying the template file in the repo root.
+
+<CodeGroup tabs="bash">
+
+```bash
+cp .env.example .env.local
+```
+
+</CodeGroup>
+
+This gives you a local-only env file that Vite will read without affecting other environments.
+
+</Step>
+
+<Step title="Set required and optional variables" icon="settings">
+
+Open `.env.local` in your editor and configure these variables:
+
+<ParamField body="VITE_FIREBASE_API_KEY" param-type="string" required="true" show-location="false">
+Public Firebase Web API key for the project. This is required for the app to boot.
+</ParamField>
+
+<ParamField body="VITE_SENTRY_DSN" param-type="string" required="false" show-location="false">
+Optional Sentry DSN for frontend error reporting. Leave unset to disable Sentry locally.
+</ParamField>
+
+<ParamField body="VITE_STRIPE_PUBLISHABLE_KEY" param-type="string" required="false" show-location="false">
+Optional Stripe publishable key for client-side Stripe interactions. Use a test key when enabled.
+</ParamField>
+
+<ParamField body="VITE_USE_EMULATORS" param-type="boolean" required="false" show-location="false">
+Optional flag that controls whether the frontend talks to local Firebase emulators. Set to `true` for local development with emulators.
+</ParamField>
+
+At minimum, set `VITE_FIREBASE_API_KEY`. Configure the others based on what you need to exercise locally.
+
+</Step>
+
+</Steps>
+
+<Callout kind="info">
+
+Env vars with the `VITE_` prefix are exposed to the browser. Use them only for values that are safe to run client-side, such as public Firebase config or publishable Stripe keys.
+
+</Callout>
+
+## Manage secrets
+
+Keep private credentials out of `.env.local` and the frontend.
+
+<Callout kind="alert">
+
+Store sensitive secrets like `STRIPE_SECRET_KEY` and other server-only credentials **only** in Firebase or Google Cloud Secret Manager for use by Cloud Functions. Do not add them to `.env.local`, Vite env vars, or commit them to the repo.
+
+</Callout>
+
+Cloud Functions read these secrets from Secret Manager at runtime. When you need a new secret, create it in the appropriate Secret Manager project and update the function configuration rather than editing local env files.
+
+## Run the app locally
+
+Use the provided npm scripts to start Firebase emulators, seed data, and run the Vite dev server.
+
+### Recommended: single command
+
+<Steps>
+
+<Step title="Start emulators, seed, and Vite together" icon="play-circle">
+
+Use the `dev:all` script from the repo root for the full local stack in one command.
+
+<CodeGroup tabs="bash">
+
+```bash
+# From the repo root
+npm run dev:all
+```
+
+</CodeGroup>
+
+This:
+
+- Starts Firebase emulators
+- Seeds emulator data
+- Launches the Vite dev server
+
+When startup completes, visit `http://localhost:3000` in your browser.
+
+</Step>
+
+<Step title="Reset emulator state (optional)" icon="trash">
+
+If emulator data becomes stale or corrupted, run the fresh variant.
+
+<CodeGroup tabs="bash">
+
+```bash
+# From the repo root
+npm run dev:all:fresh
+```
+
+</CodeGroup>
+
+This clears persisted emulator data, re-runs the emulators, re-seeds, and restarts Vite so you get a clean local state.
+
+</Step>
+
+</Steps>
+
+### Alternative: two-terminal workflow
+
+If you prefer separate control over emulators and Vite, use the split commands.
+
+<Steps>
+
+<Step title="Terminal 1: start emulators and seed" icon="terminal">
+
+In the first terminal, start the emulators and seeding only.
+
+<CodeGroup tabs="bash">
+
+```bash
+# Terminal 1, from repo root
+npm run dev:start
+```
+
+</CodeGroup>
+
+Leave this terminal running to keep Firebase emulators and seed processes active.
+
+</Step>
+
+<Step title="Terminal 2: run the Vite dev server" icon="terminal">
+
+In a second terminal, start the Vite dev server.
+
+<CodeGroup tabs="bash">
+
+```bash
+# Terminal 2, from repo root
+npm run dev
+```
+
+</CodeGroup>
+
+When Vite is ready, it will print a URL such as `http://localhost:3000`. Open it in your browser to use the app against the local emulators.
+
+</Step>
+
+</Steps>
+
+<Callout kind="info">
+
+Additional scripts you may encounter include `dev:fresh`, `dev:seed`, `emulators`, `emulators:no-persist`, and `seed:emulators`. These provide more granular control for CI or advanced workflows while still targeting the same local stack.
+
+</Callout>
+
+## Default local ports
+
+These are the standard ports used by the local stack:
+
+| Service            | Port |
+| ------------------ | ---- |
+| Vite dev server    | 3000 |
+| Emulator UI        | 4000 |
+| Firestore emulator | 8080 |
+| Auth emulator      | 9099 |
+| Storage emulator   | 9199 |
+| Functions emulator | 5001 |
+
+If a port is already in use, the corresponding tool may prompt for an alternative; use the defaults whenever possible to match existing scripts and docs.
+
+## Troubleshooting emulators
+
+Use the health check script to verify that your emulators are running correctly.
+
+<Steps>
+
+<Step title="Run emulator health check" icon="help-circle">
+
+Execute the health script from the repo root.
+
+<CodeGroup tabs="bash">
+
+```bash
+npm run health:emulators
+```
+
+</CodeGroup>
+
+Review the output for any failing checks and fix issues such as missing tools, wrong ports, or crashed emulators before continuing development.
+
+</Step>
+
+</Steps>
+
+If problems persist, restart with `npm run dev:all:fresh` to reset emulator state, then re-run the health check.
+
+## Next steps
+
+Once your environment is running and you can log in locally, explore how the system fits together and how it is deployed.
+
+<Columns cols={2}>
+
+<Card
+  title="Architecture overview"
+  href="/architecture-overview"
+  icon="database"
+  cta="Understand the system design"
+>
+
+See how the front-end, Firebase emulators, Cloud Functions, and external services fit together in the GrantMaster architecture.
+
+</Card>
+
+<Card
+  title="Deployment and infrastructure"
+  href="/deployment-and-infrastructure"
+  icon="cloud"
+  cta="Learn how changes ship"
+>
+
+Review how environments are configured, how functions and hosting are deployed, and where secrets live in production.
+
+</Card>
+
+</Columns>

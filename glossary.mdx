@@ -1,0 +1,116 @@
+---
+title: Glossary
+description: Canonical definitions for core GrantMaster concepts, grouped by domain so engineers and technical readers can keep terminology consistent.
+---
+
+## Core terminology
+
+GrantMaster uses specific terms for platform concepts, data structures, and AI capabilities. Use this glossary to align naming in code, APIs, and internal discussions.
+
+<Callout kind="info">
+
+Keep these term names and meanings consistent across code, UI, API contracts, and documentation. When in doubt, defer to the definitions on this page rather than inventing new labels.
+
+</Callout>
+
+<Tabs>
+
+<Tab title="Platform and tenancy" icon="settings">
+
+**Platform** — The overall GrantMaster ecosystem, including shared services, data pipelines, AI components, and management tooling that support all customers.
+
+**Tenant / Organization** — A single customer NGO environment. Each tenant represents one organization and is strictly isolated from other tenants at the data and configuration level.
+
+**SuperAdmin** — An internal GrantMaster employee account with platform-wide permissions across all tenants. SuperAdmins manage extensions, catalogs, and tenant-level settings.
+
+**Admin** — A tenant-scoped user with elevated permissions within a single organization. Admins manage users, roles, and configuration only for their own tenant.
+
+</Tab>
+
+<Tab title="Extensions and grants" icon="folder">
+
+**Extension** — A discrete feature module within the platform, such as Grant Discovery, that can be enabled or disabled per tenant.
+
+**Catalog** — The SuperAdmin-managed list of available extensions. The catalog controls which extensions exist and can be installed into tenants.
+
+**Installation** — A specific tenant’s instance of an extension, including any trial status, configuration, and tenant-scoped data for that feature.
+
+**Grant Listing** — A scraped or ingested funding opportunity from external sources such as Grants.gov or private portals.
+
+**Pursuit** — An active attempt to secure a specific grant listing. Pursuits typically move through states such as Drafting and then to Won or Lost.
+
+**Pipeline** — A Kanban-style board that tracks the status of multiple pursuits. Each column represents a lifecycle stage, and cards represent individual pursuits.
+
+**Project** — The implementation artifact created from a Won pursuit. Projects represent funded work and post-award execution.
+
+**Effort** — A block of time or resources allocated to a project or pursuit. Efforts capture planning and tracking of work quantity, such as staff hours.
+
+</Tab>
+
+<Tab title="AI and agents" icon="zap">
+
+**Mission Profile** — Structured AI matching data that describes an organization’s focus areas, geographies, and priorities. Mission profiles guide grant recommendations and relevance scoring.
+
+**Scraper** — A service that monitors grant portals (for example, Grants.gov) and ingests or updates grant listings in the platform.
+
+**Impact Taxonomy** — A hierarchical category system for describing impact areas, such as `Health` and nested entries like `Health > Rural Support`. Used for classification, matching, and reporting.
+
+**Agent** — An autonomous, multi-step AI workflow that runs under role-based access control and consumes credits. Agent implementations live under `src/features/agents/`.
+
+**Agent Run** — A single execution of an agent. Runs transition through states such as `queued` → `running` → (`paused` | `completed` | `failed` | `cancelled`), and hold logs and intermediate results.
+
+**Agent Tool** — A permission-scoped capability that an agent can invoke, such as reading tenant data or writing a pursuit update. Tools encapsulate side-effectful or privileged operations.
+
+**Genkit (Gemini)** — The orchestration layer for Gemini-based models, implemented in `src/features/ai/services/geminiService.ts`. Genkit coordinates prompts, models, and tool calls.
+
+**RAG** — Retrieval-augmented generation. The pattern and implementation that turns tenant documents into context for LLMs, primarily handled by `ragService.ts`.
+
+</Tab>
+
+<Tab title="Billing and impact" icon="bar-chart">
+
+**Credit** — The base metering unit for AI usage. Agent runs and other AI-powered operations consume credits according to configured pricing and limits.
+
+**Entitlement** — A tier-gated capability flag defined in `src/config/entitlements.ts`. Entitlements control which features or limits are available to a given tenant plan.
+
+**M&E Indicator** — A monitoring and evaluation metric that tracks impact (for example, number of beneficiaries served). Indicators and their logic live in `src/features/impact/`.
+
+</Tab>
+
+<Tab title="Architecture and integrations" icon="cloud">
+
+**EventBus** — The messaging backbone that decouples services by emitting and consuming events. Services publish domain events and subscribe to them instead of calling each other directly.
+
+**BaseService** — A common service base class that centralizes logging, error handling, and event emission patterns for backend services.
+
+**Impersonation** — A SuperAdmin troubleshooting capability that allows acting as a tenant user to reproduce issues, without breaking tenant isolation guarantees.
+
+**tRPC** — The type-safe remote procedure call layer used together with Cloud Functions. tRPC defines contracts between frontend and backend and enforces typed requests and responses.
+
+**Portal Token** — A time- and scope-bound credential that grants limited read access to selected resources (for example, for external reviewers), typically persisted in a `portalTokens` store.
+
+**Grantor Portal** — An external-facing interface for grantors or reviewers. Grantor portals allow non-tenant users to review, score, or manage submissions without full tenant access.
+
+</Tab>
+
+</Tabs>
+
+## Related docs
+
+Use these pages alongside the glossary when designing features or APIs:
+
+<Columns cols={2}>
+
+<Card title="Architecture overview" href="/architecture-overview" icon="database" cta="View architecture">
+
+High-level view of services, data flows, and how EventBus, BaseService, agents, and RAG fit together.
+
+</Card>
+
+<Card title="Environment setup" href="/environment-setup" icon="terminal" cta="Set up your env">
+
+Developer environment prerequisites and configuration so you can work with services and agents locally.
+
+</Card>
+
+</Columns>

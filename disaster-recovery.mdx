@@ -1,0 +1,301 @@
+---
+title: Disaster recovery and backups
+description: Operational runbook for GrantMaster disaster recovery, including backup policy, RPO/RTO targets, emergency procedures, break-glass flows, and testing.
+---
+
+## Overview
+
+GrantMaster uses managed backups and documented operational runbooks to recover from data loss, corruption, or regional outages within defined objectives.
+
+This page describes the backup strategy, recovery objectives, and concrete procedures engineers and operators follow during an incident.
+
+<Callout kind="alert">
+
+Treat everything on this page as an operational runbook. During an incident, prioritize following these procedures exactly before making ad hoc changes.
+
+</Callout>
+
+## Recovery objectives
+
+GrantMaster commits to the following disaster recovery objectives for production:
+
+- **Recovery Point Objective (RPO): 24 hours**  
+  At most 24 hours of data changes are lost in a worst-case restore.
+
+- **Recovery Time Objective (RTO): 4 hours**  
+  Restore core functionality and user access within 4 hours of declaring a disaster.
+
+Use these targets when deciding whether to fail over, roll back to a backup, or keep mitigating in place.
+
+## Backup policy
+
+Backups cover all stateful systems in the GrantMaster production environment. The table summarizes what is backed up, how often, and for how long.
+
+| System        | Backup cadence | Retention | Mechanism                        |
+| ------------- | -------------- | --------- | -------------------------------- |
+| Firestore     | Daily          | 30 days   | GCP managed export               |
+| Cloud Storage | Real-time      | 30 days   | Object versioning                |
+| GCP Secrets   | On change      | 30 days+  | Manual export to cold storage    |
+| Auth users    | Weekly         | 90 days   | `firebase auth:export` snapshots |
+
+### Firestore backups
+
+Firestore data is exported once per day using a GCP managed export job, with **30 days of retention**.
+
+You can restore at the granularity of a shard or collection to minimize blast radius during a corruption event.
+
+### Cloud Storage backups
+
+Cloud Storage buckets use **object versioning** with a **30-day retention window**.
+
+Versioning provides real-time protection: each write creates a new object generation that you can roll back to if a file is deleted or corrupted.
+
+### GCP Secrets backups
+
+GCP Secret Manager entries are exported **on change** to cold storage.
+
+These exports are performed manually and stored in a dedicated, access-controlled bucket intended only for emergency recovery or audit.
+
+<Callout kind="alert">
+
+Do not use cold storage secret exports for routine configuration changes. They exist only for disaster recovery and post-incident forensics.
+
+</Callout>
+
+### Auth users backups
+
+Authentication users are backed up **weekly** with **90 days retention** using `firebase auth:export`.
+
+<CodeGroup tabs="CLI" show-lines={true}>
+
+```bash
+firebase auth:export auth-backup.csv
+```
+
+</CodeGroup>
+
+Confirm that the export file appears in the expected backup location and that its size and row count align with previous snapshots.
+
+## Emergency procedures
+
+Use the following runbooks when handling high-severity incidents that affect data integrity or availability.
+
+<Callout kind="alert">
+
+Always record incident timeline, commands executed, and restored backup timestamps in the incident ticket. This information is required for post-incident review.
+
+</Callout>
+
+### Data corruption recovery
+
+Use this when writes or background jobs corrupt a subset of Firestore data but the infrastructure is otherwise healthy.
+
+<Steps>
+
+  <Step title="Identify corruption scope and backup timestamp" icon="search">
+
+Determine which collections or shards are affected, when the corruption started, and the latest safe restore point.
+
+- Compare recent application logs and metrics to pinpoint when bad writes began
+- Inspect object history and Firestore document change history for anomalies
+- Choose a backup timestamp strictly before the first known corrupt write
+
+**Success signal:** you have a concrete list of Firestore shards or collections to restore and a target backup timestamp.
+
+  </Step>
+
+  <Step title="Run restore-firestore-shard script" icon="terminal">
+
+Use the `restore-firestore-shard` script to restore only the affected data from the selected backup. Scope restores as narrowly as possible to reduce data loss.
+
+Represent the invocation in your incident notes without assuming flags or paths, for example:
+
+- Script name: `restore-firestore-shard`
+- Target scope: affected shards or collections
+- Selected backup timestamp
+
+Monitor script output and Firestore error rates during restore.
+
+**Success signal:** the script completes without errors and spot checks confirm restored data matches expectations.
+
+  </Step>
+
+  <Step title="Communicate via Incident Status banner" icon="info">
+
+Once the restore is complete and validated, update the **Incident Status banner** in the application to inform users:
+
+- Nature of impact (for example, "application timelines delayed between 01:00–03:00 UTC")
+- Recovery actions taken (restore from backup and any compensating jobs)
+- Any actions required from users, if applicable
+
+**Success signal:** the banner is visible in production and the incident ticket reflects the final restore timestamp and collections affected.
+
+  </Step>
+
+</Steps>
+
+### Regional outage (us-central1) failover
+
+Use this when the primary region `us-central1` experiences a sustained outage and cannot serve traffic.
+
+<Steps>
+
+  <Step title="Assess outage and declare failover" icon="alert-triangle">
+
+Confirm that the issue is regional (for example, us-central1 network or service degradation) and not limited to GrantMaster.
+
+- Validate using GCP status dashboards and provider alerts
+- Cross-check synthetic checks from other regions
+- Align with on-call engineering lead to formally declare failover
+
+**Success signal:** the incident is classified as a regional outage and the decision to fail over is documented in the incident ticket.
+
+  </Step>
+
+  <Step title="Update Cloudflare DNS to europe-west3" icon="settings">
+
+Shift external traffic from `us-central1` to the secondary region `europe-west3` by updating Cloudflare DNS records.
+
+- Point the primary application hostname to the europe-west3 load balancer
+- Reduce TTLs before change if time permits
+- Monitor propagation and region-specific latency
+
+**Success signal:** new connections terminate in europe-west3 and synthetic checks from multiple regions succeed.
+
+  </Step>
+
+  <Step title="Enable read-only mode" icon="lock">
+
+Place GrantMaster into **Read-Only mode** while the system runs from europe-west3 to avoid write conflicts or data divergence.
+
+- Enable feature flags or maintenance settings that disable non-idempotent writes
+- Keep read endpoints available for core workflows (for example, reviewing applications)
+- Document exactly which operations are blocked
+
+**Success signal:** write attempts are rejected with clear messaging, while read queries succeed in europe-west3.
+
+  </Step>
+
+</Steps>
+
+## Break-glass protocol
+
+Break-glass actions bypass normal change controls and grant elevated access needed to contain a security or credential compromise.
+
+<Callout kind="alert">
+
+Use break-glass only when you confirm or strongly suspect credential compromise or malicious access. Every invocation must be paired with a security incident and full audit trail.
+
+</Callout>
+
+<Steps>
+
+  <Step title="Use the secondary custodian hardware key" icon="shield">
+
+Access the designated **secondary custodian hardware key** stored under dual control.
+
+- Retrieve the key following your team's physical access policy
+- Authenticate to the production GCP organization or security console
+- Confirm that you are acting under an open security incident
+
+**Success signal:** you have privileged access with the custodian key and the activity is logged in the incident record.
+
+  </Step>
+
+  <Step title="Run Revoke All Service Account Keys script" icon="terminal">
+
+Execute the `Revoke All Service Account Keys` script to invalidate existing service account keys.
+
+When recording the action, capture only script name, scope, and mode of operation rather than specific command flags or paths.
+
+Verify that no legacy keys remain active and that workloads relying on key-based auth are either rotated or migrated to keyless mechanisms.
+
+**Success signal:** the script reports 0 remaining active keys and subsequent key-based authentication attempts fail as expected.
+
+  </Step>
+
+  <Step title="Regenerate Firebase and Novu keys" icon="key">
+
+Regenerate all Firebase and Novu API keys and update dependent services.
+
+- Create new API keys in the Firebase console and Novu dashboard
+- Update application configuration (Secrets Manager, CI/CD, and runtime configs)
+- Redeploy affected services to pick up new keys
+
+**Success signal:** all services authenticate successfully with new credentials and security monitoring shows no unauthorized access attempts using revoked keys.
+
+  </Step>
+
+</Steps>
+
+## Testing and verification
+
+Run a **simulated outage every 6 months** to validate that backups, scripts, and communication channels work as expected.
+
+<Steps>
+
+  <Step title="Plan the simulated scenario" icon="calendar">
+
+Choose a realistic but controlled scenario:
+
+- Targeted Firestore corruption of a non-critical shard
+- Partial Cloud Storage object loss
+- Simulated us-central1 unavailability requiring DNS failover
+
+Define success criteria, including RPO/RTO validation and communication expectations.
+
+  </Step>
+
+  <Step title="Exercise backups and scripts" icon="play-circle">
+
+During the simulation:
+
+- Execute `restore-firestore-shard` against a staging or canary environment
+- Validate Cloud Storage rollback using object versioning
+- Practice Cloudflare DNS updates and read-only mode activation
+
+Record timings from incident declaration to restore completion.
+
+  </Step>
+
+  <Step title="Review communications and runbook gaps" icon="bar-chart">
+
+Assess whether engineers, support, and stakeholders received timely and accurate updates.
+
+- Evaluate Incident Status banner content and timing
+- Capture confusing or missing steps in this runbook
+- File follow-up tasks to improve automation or documentation
+
+**Success signal:** the simulated outage completes within the RTO target and identified improvements are tracked to completion.
+
+  </Step>
+
+</Steps>
+
+## Related documentation
+
+<Columns cols={2}>
+
+  <Card
+    title="Deployment and infrastructure"
+    href="/deployment-and-infrastructure"
+    icon="cloud"
+    cta="View infrastructure details"
+  >
+
+Learn how GrantMaster is deployed across regions, including networking, scaling, and environment isolation, to better understand failure modes.
+
+  </Card>
+
+  <Card
+    title="Architecture overview"
+    href="/architecture-overview"
+    icon="package"
+    cta="Review system architecture"
+  >
+
+See how core services, data stores, and external providers fit together so you can reason about blast radius and recovery paths.
+
+  </Card>
+
+</Columns>

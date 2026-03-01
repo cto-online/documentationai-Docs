@@ -1,0 +1,180 @@
+---
+title: Deployment and infrastructure
+description: Understand how GrantMaster is deployed, how environments map to CI/CD, and which cloud services, monitoring, and security controls are in place.
+---
+
+## Cloud infrastructure
+
+GrantMaster runs entirely on managed Google Cloud Platform services to reduce operational overhead while keeping scaling and security predictable.
+
+### Application stack
+
+The application is split into a static frontend, a serverless backend, and managed data services.
+
+- **Frontend:** Firebase Hosting serves the web frontend over a global CDN for low-latency delivery.
+- **Backend:** Cloud Functions 2nd Gen runs Node.js functions with automatic horizontal scaling based on traffic.
+- **Database:** Cloud Firestore stores primary application data in a multi-region configuration with tenancy rules to isolate customer data.
+- **File storage:** Cloud Storage holds user-facing assets such as documents, organization logos, and generated reports.
+- **Secrets:** GCP Secret Manager stores sensitive integration credentials, including Stripe, OpenAI, and Novu keys.
+
+<Callout kind="info">
+
+GrantMaster uses multiple environments across the same cloud providers. Treat environment-specific projects, databases, and buckets as isolated; never share secrets or data between them.
+
+</Callout>
+
+### Data storage responsibilities
+
+Each storage layer serves a distinct purpose to keep access patterns and permissions clear.
+
+- **Cloud Firestore** handles structured application data, including accounts, permissions, and configuration. Tenancy rules restrict reads and writes so that each customer only accesses their own records.
+- **Cloud Storage** contains unstructured files: uploaded grant documents, supporting attachments, organization assets, and generated PDF reports.
+- **Secret Manager** is the only location for third-party API keys. Application code loads secrets at runtime instead of embedding them in configuration or environment variables.
+
+When you add new features, decide whether data belongs in Firestore (indexed, queried frequently) or Cloud Storage (binary/large objects) before implementing.
+
+## CI/CD and environments
+
+GitHub Actions orchestrates the full CI/CD pipeline from pull request to production deployment. The pipeline enforces quality gates before any change reaches users.
+
+### Environment model
+
+Three logical environments map to distinct parts of the pipeline:
+
+- **Development:** Runs on every pull request for early feedback.
+- **Staging:** Deploys automatically after merging to the main branch.
+- **Production:** Deploys only when you create a release tag in the repository.
+
+<Callout kind="info">
+
+Use staging for realistic end-to-end verification before promoting changes to production. Production deployments must come from a tagged commit that has already passed development and staging checks.
+
+</Callout>
+
+### CI/CD pipeline flow
+
+<Steps>
+
+  <Step title="Development (pull requests)" icon="terminal">
+
+  - Triggered for every new commit on a pull request.
+  - Runs the full quality suite:
+    - **Lint and scan:** ESLint, Prettier formatting checks, and vulnerability scans on dependencies.
+    - **Tests:** Unit and integration tests using Vitest and/or Jest.
+    - **Build:** Frontend build with Vite and type-checked backend Cloud Functions in TypeScript.
+  - Blocks merging when any check fails.
+
+  </Step>
+
+  <Step title="Staging deployment (post-merge)" icon="upload">
+
+  - Starts when changes merge into the main branch.
+  - Re-runs linting, scans, tests, and builds against the updated main branch.
+  - Deploys:
+    - Updated frontend bundle to Firebase Hosting for the staging site.
+    - Updated backend code to Cloud Functions 2nd Gen for staging.
+  - Exposes a stable environment for QA, product review, and integration testing.
+
+  </Step>
+
+  <Step title="Production deployment (release tag)" icon="rocket">
+
+  - Triggers when you push a release tag in Git.
+  - Reuses the same pipeline stages (lint, scan, test, build) for the tagged commit.
+  - Deploys the built artifacts to:
+    - Firebase Hosting for the production frontend.
+    - Cloud Functions 2nd Gen for the production backend.
+  - Keeps a clear audit trail by tying each production deployment to a specific release tag.
+
+  </Step>
+
+</Steps>
+
+<Callout kind="info">
+
+Before tagging a release, confirm the exact commit has already passed all checks and is running cleanly in staging. Use GitHub releases to record notes about migrations or operational actions that accompany the deployment.
+
+</Callout>
+
+## Observability and alerting
+
+GrantMaster combines application-level error tracking with platform-level logging and metrics to give engineers full visibility into production behavior.
+
+### Error tracking
+
+Sentry captures application exceptions from both frontend and backend code.
+
+- **Frontend:** Reports client-side errors, including context such as current route and user session metadata.
+- **Backend:** Captures function exceptions with stack traces and relevant request metadata.
+- **Traces:** Correlates events across services to show how a request flowed through the system.
+
+Use Sentry as the first stop when debugging user-reported issues or regression reports.
+
+### Logs, traces, and performance
+
+GCP-native tooling provides deeper insight into infrastructure behavior and performance.
+
+- **Cloud Logging:** Stores structured logs from Cloud Functions and other GCP services. Use log-based filters to investigate spikes in failures or latency.
+- **Cloud Trace:** Records distributed traces across backend calls to surface slow operations and hotspots.
+
+Combine Sentry traces with Cloud Logging and Cloud Trace sampling to understand both application and infrastructure-level behavior for a given request.
+
+### Alerting to Slack
+
+GCP Monitoring generates alerts when key service-level indicators degrade.
+
+Typical alerts include:
+
+- **5xx spikes:** Sudden increases in server errors indicating backend issues.
+- **Database unreachable:** Firestore connectivity or availability problems detected by health checks.
+
+Alerts route into Slack so the engineering team can respond quickly. Triage production incidents by starting from the Slack alert, then pivoting to Sentry, Logs, and Trace for deeper analysis.
+
+## Security posture
+
+Security controls apply at the network, application, and identity layers.
+
+### Network and perimeter
+
+- **VPC scoping:** Restricts which services and resources can communicate, reducing blast radius for potential compromise.
+- **Cloud Armor WAF:** Provides a web application firewall in front of public endpoints to mitigate DDoS attempts and common attacks such as SQL injection and cross-site scripting.
+
+Place new public-facing services behind the same perimeter so they benefit from existing WAF policies and VPC boundaries.
+
+### Identity and access control
+
+- **IAM least privilege:** GCP Identity and Access Management roles grant only the minimum permissions required for each service account and human user.
+
+When you introduce new services or CI jobs, create scoped service accounts instead of reusing broad ones, and review permissions regularly.
+
+<Callout kind="info">
+
+Treat infrastructure configuration (IAM, VPC, Cloud Armor policies) as shared critical assets. Coordinate changes with the team and verify effects in staging before applying updates to production.
+
+</Callout>
+
+## Related operations docs
+
+Use these additional pages to plan and operate the platform safely.
+
+<Columns cols={3}>
+
+  <Card title="Architecture overview" href="/architecture-overview" icon="database" cta="See high-level design">
+
+  Understand how frontend, backend, data stores, and third-party services fit together in the overall system.
+
+  </Card>
+
+  <Card title="Environment setup" href="/environment-setup" icon="settings" cta="Prepare your workspace">
+
+  Configure local and cloud environments, credentials, and required tooling before making infrastructure changes.
+
+  </Card>
+
+  <Card title="Disaster recovery" href="/disaster-recovery" icon="shield" cta="Plan for failures">
+
+  Review backup, restore, and failover procedures so you know how to respond to outages and data-loss scenarios.
+
+  </Card>
+
+</Columns>

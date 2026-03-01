@@ -1,78 +1,104 @@
 ---
-title: Set Up Your Documentation
-description: 'A minimal, editable starting point for your own documentation site.'
+title: Introduction to GrantMaster engineering docs
+description: Orient yourself in the GrantMaster codebase, architecture, and operations with a focused ramp-up path and links to core engineering runbooks.
 ---
-## Start here (5–10 minutes)
 
-1. Edit this page so it describes your product and audience.
+## Why these docs matter
 
-2. Customize your onboarding flow in the [Quickstart](/quickstart) page.
+GrantMaster is a multi-tenant SaaS used by NGOs to manage grants, projects, budgets, and compliance. The engineering docs here are the shared map of how the system works and how to operate it safely.
 
-3. Delete or rewrite any sections and pages you do not plan to use.
+<Callout kind="alert">
 
-4. Invite a teammate to review the structure and concepts starting from [Core Concepts](/concepts).
+Keep these docs aligned with the code; the codebase is the source of truth. When behavior changes, update the relevant pages so operational runbooks stay reliable.
 
-<Callout kind="alert" collapsed="false">
-  This site ships with placeholder content. Edit the text, links, and examples so they match your product before sharing it with others.
 </Callout>
 
-## What you get
+## Start here (10–15 minutes)
 
-<Columns cols="3">
-  <Card title="Docs structure" href="/quickstart" icon="book-open" horizontal="false">
-    A clear navigation layout with starter pages you can rename or replace.
-  </Card>
-
-  <Card title="Components" href="#try-a-few-components" icon="layout-grid" horizontal="false" target="_self">
-    Prebuilt blocks like Callouts, Steps, Tabs, and Cards to keep pages clean.
-  </Card>
-
-  <Card title="API reference hook" href="/authentication" icon="code" horizontal="false">
-    A placeholder `openapi.yaml` you can swap with your real API spec.
-  </Card>
-</Columns>
-
-## Make your first edit
+Follow this ramp-up path when you join the team or return after a long break. Each step builds context for the next.
 
 <Steps>
-  <Step title="Rewrite this page" icon="edit" title-type="p">
-    Update the title, description, and sections in `introduction` so they reflect your product and documentation goals.
+  <Step title="Read the architecture overview" icon="book-open" titleType="p">
+
+    Skim the high-level system design: Firebase backend (Auth, Firestore, Storage, Functions), EventBus and BaseService patterns, integrations (Novu, HubSpot, KoboToolbox), and multi-tenancy enforcement via `organizationId` and security rules. You should come away knowing the major components and how requests flow through the system.
+
   </Step>
 
-  <Step title="Customize Quickstart" icon="zap" title-type="p">
-    Replace the steps in `quickstart` with your real onboarding flow so new readers know exactly how to get started.
+  <Step title="Review the glossary of terms" icon="help-circle" titleType="p">
+
+    Learn the domain language: what Grant, Project, Budget, Workflow, and Compliance mean in this product, and how they map to data models. This makes tickets, PRs, and architecture docs much easier to parse.
+
   </Step>
 
-  <Step title="Remove or repurpose samples" icon="trash" title-type="p">
-    Delete unused sample sections and pages, or rewrite them with your own content to keep navigation focused.
+  <Step title="Set up your local environment" icon="terminal" titleType="p">
+
+    Install required tooling, configure Firebase access, and add any organization-level secrets or configs. By the end of this step, you should have all environment variables in place and be ready to run Functions and the frontend locally.
+
+  </Step>
+
+  <Step title="Run GrantMaster locally" icon="play-circle" titleType="p">
+
+    Start the services and confirm you can sign in, load an organization, and navigate core flows like viewing grants and projects. Use this as a sanity check before tackling your first issue or PR.
+
   </Step>
 </Steps>
 
-## Try a few components
+<Callout kind="info">
 
-You can browse the component gallery in the [Components](/components) page for ready-to-use examples of Cards, Callouts, Steps, Tabs, and more.
+After this initial pass, move to [Quickstart](/quickstart) or [Getting Started](/getting-started) for your first contribution or integration task.
 
-## Continue to the rest of the sample
+</Callout>
 
-<Columns cols="2">
-  <Card title="Quickstart" href="/quickstart" icon="zap" horizontal="false">
-    See the minimal setup flow.
+## What you will find here
+
+These overview pages are the backbone of the GrantMaster engineering documentation. Treat them as live references, not one-time reading.
+
+<Columns cols={3}>
+  <Card title="Architecture overview" href="/architecture-overview" icon="database">
+
+    End-to-end view of the system: Firebase services, BaseService and EventBus patterns, key data flows, and how multi-tenancy and security rules are enforced.
+
   </Card>
 
-  <Card title="Core Concepts" href="/concepts" icon="layers" horizontal="false">
-    Learn how pages, navigation, and components fit together.
+  <Card title="Glossary of terms" href="/glossary" icon="book-open">
+
+    Canonical definitions for core domain and technical terms so engineers, product, and ops speak the same language when discussing grants and projects.
+
   </Card>
 
-  <Card title="Components" href="/components" icon="code" horizontal="false">
-    A small gallery of built-in components.
+  <Card title="Environment setup" href="/environment-setup" icon="terminal">
+
+    Step-by-step instructions to configure your development environment, Firebase access, secrets, and tools so you can build and debug locally.
+
   </Card>
 
-  <Card title="Authentication" href="/authentication" icon="lock" horizontal="false">
-    Example layout for an auth guide.
+  <Card title="Deployment and infrastructure" href="/deployment-and-infrastructure" icon="cloud">
+
+    How changes move from PR to production, including CI/CD pipelines, deployment checks, environment topology, and ownership boundaries.
+
   </Card>
 
-  <Card title="Help Center" href="/help-center" icon="help-circle" horizontal="false">
-    Starter FAQ, guides, and troubleshooting templates.
+  <Card title="Disaster recovery" href="/disaster-recovery" icon="shield">
+
+    Operational runbooks for incident response: backups, restore procedures, tenant isolation concerns, and how to coordinate with stakeholders.
+
   </Card>
 </Columns>
 
+## Where to go next
+
+Use these flows once you have the core context and local setup.
+
+<Columns cols={2}>
+  <Card title="Getting Started" href="/getting-started" icon="rocket">
+
+    Walk through your first interaction with the codebase: cloning, branching, making a small change, and opening a PR that follows team conventions.
+
+  </Card>
+
+  <Card title="Quickstart" href="/quickstart" icon="zap">
+
+    A concise checklist for your first operational or feature task, linking straight into the relevant architecture, glossary, and runbook sections.
+
+  </Card>
+</Columns>

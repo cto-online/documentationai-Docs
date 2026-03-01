@@ -1,58 +1,137 @@
 ---
 title: Quickstart
-description: Minimal steps to customize this sample starter kit.
+description: Bring up GrantMaster locally, verify Firebase emulators and health checks, and know what to read next as a new engineer.
 ---
+
 ## Overview
 
-<Callout kind="alert" collapsed="false">
-  This site ships with placeholder content. Use this quickstart to replace it with your real product docs.
+<Callout kind="alert">
+
+  Use this engineering quickstart to get GrantMaster running locally, verify the emulators, and orient yourself to the core architecture.
+
 </Callout>
 
-## 1. Update a page
+## 1. Confirm prerequisites and environment
 
 <Steps>
-  <Step title="Edit introduction" icon="edit" title-type="p">
-    Replace the sample introduction with a concise overview of your product and the key actions you want new users to take first.
-  </Step>
+  <Step title="Review environment setup" icon="settings" titleType="p">
 
-  <Step title="Preview your change" icon="monitor" title-type="p">
-    Use your dashboard board editor to confirm the updated introduction looks and reads as expected.
+    Start with the environment setup guide to confirm prerequisites, install dependencies, and configure required environment variables.
+
+    Read: [Environment setup](/environment-setup)
+
   </Step>
 </Steps>
 
-## 2. Add a new page
+## 2. Run the app locally
 
 <Steps>
-  <Step title="Add a page" icon="file-text" title-type="p">
-    Create a new `page` by clicking on the + button from the left navigation bar of dashboard. If you are using git, create the .mdx file and add to navigation bar using documentation.json
+  <Step title="Start all services" icon="terminal" titleType="p">
+
+    Use the combined dev script to start Firebase emulators, seed data, and run the Vite dev server.
+
+    <CodeGroup tabs="Terminal">
+
+    ```bash
+    npm run dev:all
+    ```
+
+    </CodeGroup>
+
+    Wait until the command finishes booting and logs that emulators and Vite are running.
+
+  </Step>
+
+  <Step title="Reset local data if needed" icon="trash" titleType="p">
+
+    If you need a clean local environment, run the fresh variant to clear emulator data before starting everything again.
+
+    <CodeGroup tabs="Terminal">
+
+    ```bash
+    npm run dev:all:fresh
+    ```
+
+    </CodeGroup>
+
+    Use this when local Firestore/Auth/Storage state gets out of sync with what you expect.
+
   </Step>
 </Steps>
 
-## Example onboarding flow (replace with yours)
+## 3. Verify emulators, ports, and health
 
-1. Sign up for an account and verify your email.
+<Steps>
+  <Step title="Check emulator ports" icon="monitor" titleType="p">
 
-2. Create your first workspace, project, or environment.
+    Confirm that each service emulator is running on the expected port:
 
-3. Add one integration or data source to connect your existing tools.
+    - Vite app: `http://localhost:3000`
+    - Emulator UI: `http://localhost:4000`
+    - Firestore: `localhost:8080`
+    - Auth: `localhost:9099`
+    - Storage: `localhost:9199`
+    - Functions: `localhost:5001`
 
-4. Complete a guided action (for example, run your first job or publish your first resource).
+    Open the Emulator UI on port `4000` to inspect Firestore, Auth, Storage, and Functions state.
 
-5. Invite a teammate and assign a basic role or permission.
+  </Step>
 
-## 3. Connect API Reference (optional)
+  <Step title="Run emulator health check" icon="check-circle" titleType="p">
 
-If you have an API, replace `openapi.yaml` with your real OpenAPI file. If you do not need an API reference, remove that tab either from dashboard or  `documentation.json`.
+    Use the health script to confirm all required emulators are reachable.
+
+    <CodeGroup tabs="Terminal">
+
+    ```bash
+    npm run health:emulators
+    ```
+
+    </CodeGroup>
+
+    A successful run reports that the emulators respond correctly. Investigate any failures before continuing.
+
+  </Step>
+</Steps>
+
+## 4. Build a mental model
+
+<Steps>
+  <Step title="Read the architecture overview" icon="book-open" titleType="p">
+
+    Once your local environment is healthy, learn how the main services and data flows fit together.
+
+    Read: [Architecture overview](/architecture-overview)
+
+  </Step>
+
+  <Step title="Scan the glossary" icon="help-circle" titleType="p">
+
+    Align on shared terminology so feature docs and code comments make sense on first read.
+
+    Read: [Glossary](/glossary)
+
+  </Step>
+</Steps>
 
 ## Next steps
 
-<Columns cols="2">
-  <Card title="Core Concepts" href="/concepts" icon="layers" horizontal="false">
-    Keep the mental model simple and easy to scan.
+<Columns cols={2}>
+  <Card title="Getting started guide" href="/getting-started" icon="rocket" horizontal="false">
+    Walk through a guided flow that exercises the main user journeys on your local stack.
   </Card>
 
-  <Card title="Authentication" href="/authentication" icon="lock" horizontal="false">
-    Add your real auth flows and security notes.
+  <Card title="Architecture overview" href="/architecture-overview" icon="book-open" horizontal="false">
+    Deepen your understanding of core components, data boundaries, and integration points.
   </Card>
 </Columns>
 
+<Columns cols={2}>
+  <Card title="Deployment and infrastructure" href="/deployment-and-infrastructure" icon="cloud" horizontal="false">
+    See how GrantMaster is deployed, which environments exist, and how they map to infrastructure.
+  </Card>
+
+  <Card title="Disaster recovery" href="/disaster-recovery" icon="shield" horizontal="false">
+    Learn backup, restore, and incident response procedures for critical data and services.
+  </Card>
+</Columns>
