@@ -49,14 +49,13 @@ info:
       ```
 
     The `data` shape depends on the endpoint.
-
 servers:
   - url: https://{host}
     description: GrantMaster API server
     variables:
       host:
-        description: API host name (e.g. api.grantmaster.com)
-        default: api.grantmaster.com
+        description: API host name (e.g. localhost)
+        default: localhost
 tags:
   - name: Health
     description: Service health and status checks.
@@ -102,8 +101,8 @@ paths:
             type: string
         - name: page
           in: query
-          description: Page number (1-based).
-          required: true
+          description: Optional page number (1-based). Defaults to 1.
+          required: false
           schema:
             type: integer
             format: int32
@@ -111,8 +110,8 @@ paths:
             example: 1
         - name: pageSize
           in: query
-          description: Number of items per page (maximum 100).
-          required: true
+          description: Optional number of items per page (maximum 100). Defaults to 20.
+          required: false
           schema:
             type: integer
             format: int32
@@ -121,14 +120,14 @@ paths:
             example: 20
         - name: sortBy
           in: query
-          description: Field to sort by.
+          description: Optional field to sort by. Defaults to `createdAt`.
           required: false
           schema:
             type: string
             example: createdAt
         - name: sortOrder
           in: query
-          description: Sort order direction.
+          description: Optional sort order direction. Defaults to `desc`.
           required: false
           schema:
             type: string
@@ -155,7 +154,10 @@ paths:
                       phase: planning
                       startDate: '2024-01-01'
                       endDate: '2024-12-31'
-                      budget: 100000
+                      budget:
+                        total: 100000
+                        spent: 42500
+                        currency: USD
                       grantId: 'grant_456'
                       managerId: 'user_789'
                       managerName: Jane Doe
@@ -206,14 +208,16 @@ paths:
             schema:
               $ref: '#/components/schemas/ProjectCreateInput'
             example:
-              organizationId: 'org_1'
               name: New Project
               description: Description of the new project.
               status: draft
               phase: ideation
               startDate: '2024-03-01'
               endDate: '2024-09-30'
-              budget: 50000
+              budget:
+                total: 50000
+                spent: 0
+                currency: USD
               grantId: 'grant_900'
               managerId: 'user_500'
               managerName: John Smith
@@ -241,7 +245,10 @@ paths:
                   phase: ideation
                   startDate: '2024-03-01'
                   endDate: '2024-09-30'
-                  budget: 50000
+                  budget:
+                    total: 50000
+                    spent: 0
+                    currency: USD
                   grantId: 'grant_900'
                   managerId: 'user_500'
                   managerName: John Smith
@@ -261,10 +268,6 @@ paths:
           $ref: '#/components/responses/UnauthorizedResponse'
         '403':
           $ref: '#/components/responses/ForbiddenResponse'
-        '409':
-          $ref: '#/components/responses/ConflictResponse'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/InternalServerErrorResponse'
   /api/v1/projects/{id}:
@@ -302,8 +305,11 @@ paths:
                   phase: execution
                   startDate: '2024-01-01'
                   endDate: '2024-12-31'
-                  budget: 100000
-                  budgetUtilization: 42.5
+                  budget:
+                    total: 100000
+                    spent: 42500
+                    currency: USD
+                  budgetUtilization: 43
                   grantId: 'grant_456'
                   managerId: 'user_789'
                   managerName: Jane Doe
@@ -356,7 +362,10 @@ paths:
               status: active
               phase: execution
               endDate: '2024-10-01'
-              budget: 120000
+              budget:
+                total: 120000
+                spent: 30000
+                currency: USD
               managerId: 'user_600'
               managerName: Alice Johnson
               teamMemberIds:
@@ -383,7 +392,10 @@ paths:
                   phase: execution
                   startDate: '2024-01-01'
                   endDate: '2024-10-01'
-                  budget: 120000
+                  budget:
+                    total: 120000
+                    spent: 30000
+                    currency: USD
                   grantId: 'grant_456'
                   managerId: 'user_600'
                   managerName: Alice Johnson
@@ -405,10 +417,6 @@ paths:
           $ref: '#/components/responses/ForbiddenResponse'
         '404':
           $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          $ref: '#/components/responses/ConflictResponse'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/InternalServerErrorResponse'
     delete:
@@ -434,8 +442,16 @@ paths:
           schema:
             type: boolean
       responses:
-        '204':
-          description: Project deleted successfully. No content is returned on success.
+        '200':
+          description: Project deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDeleteResponse'
+              example:
+                success: true
+                data:
+                  id: proj_123
         '400':
           $ref: '#/components/responses/BadRequestResponse'
         '401':
@@ -451,7 +467,6 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
       description: Firebase ID token or portal token passed via the Authorization header as a Bearer token.
     ApiKeyAuth:
       type: apiKey
@@ -571,10 +586,23 @@ components:
           description: Optional project end date.
           example: '2024-12-31'
         budget:
-          type: number
-          format: double
+          type: object
           description: Optional budget allocated to the project.
-          example: 100000
+          properties:
+            total:
+              type: number
+              format: double
+              description: Total budget allocated to the project.
+              example: 100000
+            spent:
+              type: number
+              format: double
+              description: Amount of the budget that has been spent.
+              example: 42500
+            currency:
+              type: string
+              description: Currency code for the budget amounts.
+              example: USD
         grantId:
           type: string
           description: Optional identifier of the associated grant.
@@ -637,18 +665,14 @@ components:
           description: Project document including optional budget utilization when budget is present.
           properties:
             budgetUtilization:
-              type: number
-              format: double
+              type: integer
+              format: int32
               description: Percentage of the budget that has been utilized. Only present when a budget is defined.
-              example: 42.5
+              example: 43
     ProjectCreateInput:
       type: object
       description: Fields required to create a new project.
       properties:
-        organizationId:
-          type: string
-          description: Identifier of the organization that owns the project.
-          example: org_1
         name:
           type: string
           description: Project name.
@@ -676,10 +700,23 @@ components:
           description: Optional project end date.
           example: '2024-12-31'
         budget:
-          type: number
-          format: double
+          type: object
           description: Optional budget allocated to the project.
-          example: 100000
+          properties:
+            total:
+              type: number
+              format: double
+              description: Total budget allocated to the project.
+              example: 100000
+            spent:
+              type: number
+              format: double
+              description: Amount of the budget that has been spent.
+              example: 0
+            currency:
+              type: string
+              description: Currency code for the budget amounts.
+              example: USD
         grantId:
           type: string
           description: Optional identifier of the associated grant.
@@ -709,7 +746,6 @@ components:
             - community
             - outreach
       required:
-        - organizationId
         - name
         - status
     ProjectUpdateInput:
@@ -743,10 +779,23 @@ components:
           description: Optional project end date.
           example: '2024-12-31'
         budget:
-          type: number
-          format: double
+          type: object
           description: Optional budget allocated to the project.
-          example: 120000
+          properties:
+            total:
+              type: number
+              format: double
+              description: Total budget allocated to the project.
+              example: 120000
+            spent:
+              type: number
+              format: double
+              description: Amount of the budget that has been spent.
+              example: 30000
+            currency:
+              type: string
+              description: Currency code for the budget amounts.
+              example: USD
         grantId:
           type: string
           description: Optional identifier of the associated grant.
@@ -848,6 +897,27 @@ components:
       required:
         - success
         - data
+    ProjectDeleteResponse:
+      type: object
+      description: Response envelope returned when a project is deleted.
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the request was successful.
+          example: true
+        data:
+          type: object
+          description: Data payload containing the identifier of the deleted project.
+          properties:
+            id:
+              type: string
+              description: Identifier of the deleted project.
+              example: proj_123
+          required:
+            - id
+      required:
+        - success
+        - data
   responses:
     BadRequestResponse:
       description: The request was invalid or cannot be otherwise served.
@@ -893,28 +963,6 @@ components:
             error:
               code: NOT_FOUND
               message: The requested resource does not exist.
-    ConflictResponse:
-      description: The request could not be completed due to a conflict with the current state of the target resource.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            success: false
-            error:
-              code: CONFLICT
-              message: A resource with the given identifier already exists.
-    UnprocessableEntityResponse:
-      description: The request was well-formed but was unable to be followed due to semantic errors.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            success: false
-            error:
-              code: UNPROCESSABLE_ENTITY
-              message: One or more fields contain semantic validation errors.
     InternalServerErrorResponse:
       description: An unexpected error occurred on the server.
       content:
