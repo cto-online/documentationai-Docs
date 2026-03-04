@@ -1,0 +1,183 @@
+---
+title: Can’t sign in to Grantmaster
+description: Diagnose and fix common Grantmaster sign-in issues, including wrong email, missing invites, SSO vs password confusion, MFA problems, and locked or missing org access.
+---
+
+## Symptoms
+
+Use this page if one or more of these are true:
+
+- You see an "invalid email or password" error when you try to sign in.
+- You never received an invitation email or sign-in link.
+- You are unsure whether to use SSO, an email link, or a password.
+- Grantmaster asks you to sign in again right after you sign in.
+- You cannot complete multi-factor authentication (MFA).
+- You see errors about a locked, disabled, or missing account.
+- You signed in successfully but your expected organization is missing.
+
+<Callout kind="tip">
+
+If you are new to Grantmaster, start with the [getting started FAQ](/help-center/faq/getting-started) to confirm how your team set up access.
+
+</Callout>
+
+## Fix sign-in issues
+
+Follow these steps in order. Stop once you can sign in and reach the correct organization.
+
+<Steps>
+
+  <Step title="Confirm you are using the correct email" icon="check-circle">
+
+  Grantmaster access is organization-scoped and tied to your work email. If you use the wrong email, you may not see your org or may not be able to sign in.
+
+  - Try the email address your admin used when they invited you (usually your primary work email).
+  - Check alternate work aliases if you have them (for example, `firstname.lastname@acme.com` vs `flastname@acme.com`).
+  - Avoid personal addresses unless your admin explicitly used them.
+
+  If you still cannot sign in, continue to the next step.
+
+  </Step>
+
+  <Step title="Resend or locate your invitation" icon="mail">
+
+  If you never received an invite or sign-in email, it may be delayed, filtered, or expired.
+
+  - Check your spam, junk, and filtered folders for messages with "Grantmaster" in the subject or sender.
+  - Search your inbox for "Grantmaster" and your admin’s name.
+  - Ask your organization admin or manager to resend your invite.
+
+  <Callout kind="alert">
+
+  Do not forward invitation links to other people. Each invite is tied to a specific email and may grant access to sensitive organization data.
+
+  </Callout>
+
+  If the new invite still does not arrive, ask your admin or IT team to:
+
+  - Confirm that your email address is correct.
+  - Check if any security filters or mail rules are blocking Grantmaster emails.
+
+  </Step>
+
+  <Step title="Check whether you should use SSO, password, or email link" icon="lock">
+
+  Many organizations require you to sign in with single sign-on (SSO) instead of a Grantmaster-specific password.
+
+  - Look for an option like "Continue with SSO", "Sign in with your company account", or a button with your company name.
+  - If your admin told you that SSO is required, always start from that SSO button or your company’s app launcher rather than entering a password.
+  - If your organization does not use SSO, use the sign-in method your invite mentioned (password or email sign-in link).
+
+  If you enter a password where SSO is required, you can see repeated "invalid password" errors even though your corporate password works elsewhere.
+
+  </Step>
+
+  <Step title="Resolve expired sessions and basic browser issues" icon="terminal">
+
+  Sometimes you sign in successfully, but Grantmaster sends you back to the sign-in screen or logs you out immediately.
+
+  - Sign out fully from Grantmaster and your SSO provider in all tabs.
+  - Close and reopen your browser, then try again in a private/incognito window.
+  - Make sure cookies and JavaScript are enabled for Grantmaster.
+  - If your device uses a VPN or strict network filtering, try from a different network or ask IT if the Grantmaster domain is allowed.
+
+  If you can sign in from another browser or device, the issue is likely local to your original browser or machine.
+
+  </Step>
+
+  <Step title="Fix MFA (multi-factor) issues" icon="shield">
+
+  If your sign-in stops at the MFA step, focus on your second factor.
+
+  - Verify the time and timezone on your device are correct; time drift can break code-based authenticators.
+  - Try another MFA method if you have one configured (for example, backup codes or a different authenticator app).
+  - If you changed phones or lost access to your authenticator, contact your organization admin to reset your MFA for Grantmaster.
+
+  <Callout kind="alert">
+
+  Never share one-time codes or MFA screenshots with anyone, including support. An admin or support agent may confirm that a code was sent, but will never ask you to read the code to them.
+
+  </Callout>
+
+  </Step>
+
+  <Step title="Check if your account is locked or disabled" icon="alert-triangle">
+
+  Some errors indicate that your account is locked, disabled, or suspended by an admin or security policy.
+
+  - Look for messages that mention "locked", "disabled", or "contact your administrator".
+  - Confirm with your team whether your employment status or access level recently changed.
+  - Ask an organization **ADMIN** or **MANAGER** in Grantmaster to confirm your status and role.
+
+  Grantmaster uses org-scoped, role-based access (ADMIN, MANAGER, MEMBER, AUDITOR). Even if you sign in successfully, disabled accounts or missing roles can prevent access to an organization’s data.
+
+  For more about roles, share the [roles and permissions FAQ](/help-center/faq/roles-permissions) with your admin.
+
+  </Step>
+
+  <Step title="Verify organization access if 'org not found'" icon="users">
+
+  If you sign in but do not see your expected organization, or you see an "organization not found" message, your user may not be linked to that org.
+
+  - Confirm the exact organization name with your teammates (for example, "Acme Corp – US" vs "Acme Corp – EU").
+  - Ask a Grantmaster ADMIN in that org to check if your email is listed as a user and which role you have.
+  - If you belong to multiple orgs, make sure you are switching to the correct one in the org selector, if available.
+
+  If your admin does not see your email in the org, they need to invite you with the correct address and role.
+
+  </Step>
+
+  <Step title="Escalate to your admin or Grantmaster support" icon="help-circle">
+
+  If you still cannot sign in after the previous steps, gather details before contacting your org admin or Grantmaster support. This speeds up resolution and avoids back-and-forth.
+
+  Include the following in your message:
+
+  - **Email address used to sign in** (and any work aliases that might be relevant).
+  - **Organization name** you expected to access (for example, "Acme Payments – Production").
+  - **Approximate timestamp** of your latest failed attempt, including timezone.
+  - **Full-screen screenshot** of the error message, including the browser address bar.
+  - **Sign-in method** you used: SSO, email link, or password + MFA.
+  - **Whether you have ever signed in successfully before** and, if so, when.
+
+  <Callout kind="alert">
+
+  Do not include your password, MFA codes, or full security answers in your ticket or email. Support only needs the error message, your email, org name, and timing details to investigate.
+
+  </Callout>
+
+  Your admin can check your org membership and roles. If they confirm that your account is correctly configured but you still cannot sign in, they can escalate to Grantmaster support with the details above.
+
+  </Step>
+
+</Steps>
+
+## What to read next
+
+Once you can sign in and access the right organization:
+
+<Columns cols={2}>
+
+  <Card
+    title="Getting started FAQ"
+    href="/help-center/faq/getting-started"
+    icon="book-open"
+    cta="Review setup basics"
+  >
+
+  Learn how Grantmaster projects, environments, and access are structured so you know what to expect after sign-in.
+
+  </Card>
+
+  <Card
+    title="Roles and permissions"
+    href="/help-center/faq/roles-permissions"
+    icon="shield"
+    cta="Check your access level"
+  >
+
+  Understand ADMIN, MANAGER, MEMBER, and AUDITOR roles so you can request the right permissions from your org admin.
+
+  </Card>
+
+</Columns>

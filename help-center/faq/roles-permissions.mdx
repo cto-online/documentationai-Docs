@@ -1,0 +1,170 @@
+---
+title: Roles and permissions FAQ
+description: Understand Grantmaster roles, what each role can do, and how to request access changes or troubleshoot missing projects and approvals.
+---
+
+## Roles and permissions overview
+
+Grantmaster uses role-based access control so each person has the level of access they need without overexposing sensitive data or controls.
+
+<Callout kind="info">
+
+Follow least-privilege: hold the lowest role that still lets you do your work. If you need more access, request a role change instead of sharing accounts.
+
+</Callout>
+
+<ExpandableGroup>
+
+<Expandable title="What are the core roles in Grantmaster?">
+
+Grantmaster defines four customer-facing roles plus one platform-only role:
+
+- **ADMIN** — Full control of the organization configuration.
+- **MANAGER** — Oversight of projects and approvals.
+- **MEMBER** — Day-to-day contributors submitting their own work.
+- **AUDITOR** — Read-only access for review and export.
+
+A separate **SUPER_ADMIN** role exists for platform operations and support. Customers do not assign or manage SUPER_ADMIN; it is restricted to the Grantmaster team.
+
+</Expandable>
+
+<Expandable title="What can an ADMIN do?">
+
+Admins manage the entire organization:
+
+- Configure **org settings**, policies, and billing.
+- Invite, remove, and update **user roles**.
+- Set up and manage **projects and grants**.
+- Control global workflows that affect how expenses and journals move through approvals.
+
+If you see options to manage billing, organization-wide settings, or user roles, you are likely an ADMIN.
+
+</Expandable>
+
+<Expandable title="What can a MANAGER do?">
+
+Managers focus on operational oversight:
+
+- Review and **approve or reject expenses** submitted by Members.
+- Review and **approve journals or time entries** for their projects.
+- Manage **projects and grants** they are responsible for, including assigning team members.
+- View reporting for their projects without having full organization-level control.
+
+Managers typically cannot change org-wide billing, policies, or user roles. If you need those capabilities, speak with an Admin.
+
+</Expandable>
+
+<Expandable title="What can a MEMBER do?">
+
+Members are individual contributors:
+
+- **Submit their own expenses** and supporting documents.
+- **Log journals or time entries** related to assigned projects or grants.
+- View the status of their own submissions and approvals.
+
+Members cannot approve other users' expenses or journals, modify org settings, or see sensitive financial details beyond what is required for their own work.
+
+</Expandable>
+
+<Expandable title="What can an AUDITOR do?">
+
+Auditors have read-only access optimized for oversight:
+
+- View **all relevant records** such as projects, grants, expenses, and journals.
+- **Export data** for external review or compliance.
+- Run audit queries and reconcile records without changing underlying data.
+
+Auditors cannot create, edit, approve, or delete records, and they cannot change org settings or user roles.
+
+</Expandable>
+
+<Expandable title="What is SUPER_ADMIN and why do I not see it?">
+
+SUPER_ADMIN is a platform-level role used by Grantmaster for operations and support. It is not a customer-facing role:
+
+- Customers do **not** assign SUPER_ADMIN to their users.
+- SUPER_ADMIN access is tightly controlled and audited by the Grantmaster team.
+- When support staff use elevated access, it is for time-limited troubleshooting or maintenance.
+
+If someone at your organization appears to have unusual access beyond ADMIN, contact support through your normal channel to confirm their role.
+
+</Expandable>
+
+<Expandable title="Why do I not see a project or grant I expect to have access to?">
+
+If a project or grant is missing:
+
+- You might not be **assigned** to that project as a Member or Manager.
+- Your role may not allow viewing **all** projects by default.
+- The project might not be created yet or is archived.
+
+First, confirm with your internal Admin or project owner that:
+
+- The project or grant exists.
+- You are added to the correct project team.
+
+If you are setting up a new project and do not see it after configuration, follow the steps in [Set up your organization and first project](/help-center/guides/setup-project) and verify your project setup matches your expected structure.
+
+</Expandable>
+
+<Expandable title="How do I request a role change (for example, from MEMBER to MANAGER)?">
+
+To request a role change:
+
+1. Identify which role you need (for example, MANAGER to approve expenses for your team).
+2. Contact your **organization Admin** using your standard internal process (IT ticket, manager request, or email).
+3. Provide:
+   - Your current role (if known).
+   - The role you need.
+   - The specific actions you need to perform (for example, approve journals for a project).
+
+Only Admins in your organization can update roles. If you are unsure who that is, ask your manager or finance/operations lead.
+
+</Expandable>
+
+<Expandable title="What should I do if I believe I have incorrect access?">
+
+If you think your access is wrong (too much or too little):
+
+1. Stop any action that might be impacted by incorrect permissions, especially approvals or configuration changes.
+2. Capture a quick example:
+   - A project you can or cannot see.
+   - An action you can or cannot perform (for example, approving expenses).
+3. Share this with your **Admin** and describe what you believe your access should be.
+
+Admins can adjust your role or confirm that the current permissions are intentional. If your Admin suspects a system misconfiguration, they can escalate to Grantmaster support with details of your account and the affected projects or grants.
+
+</Expandable>
+
+<Expandable title="Why can I not approve expenses or journals?">
+
+You likely do not have a role with approval permissions for that scope:
+
+- **Managers** approve expenses and journals for their projects.
+- **Admins** may be configured to approve at an org or grant level, depending on your setup.
+- **Members** and **Auditors** cannot approve submissions.
+
+Confirm:
+
+- Your current role.
+- That you are assigned as a Manager or approver on the specific project or grant.
+- That the workflow for that project expects you as an approver.
+
+If your role and assignment look correct but approvals still fail, your access issue might be related to sign-in or account configuration. Check [Grantmaster page will not load](/help-center/troubleshooting/install-error) for general troubleshooting or contact your Admin.
+
+</Expandable>
+
+<Expandable title="Does my role affect sign-in or account access?">
+
+Roles control what you can do **after** you sign in. If you cannot sign in at all, the issue is separate from your permission level.
+
+If you cannot access your account:
+
+- Confirm you are using the correct email and authentication method.
+- If you still cannot sign in, follow the guidance in [Help Center](/help-center), [Grantmaster page will not load](/help-center/troubleshooting/install-error), and [Troubleshoot sign-in problems](/help-center/troubleshooting/cant-sign-in), or contact your Admin for help.
+
+Once you regain access, your existing role (ADMIN, MANAGER, MEMBER, or AUDITOR) will determine what you see and which actions you can perform.
+
+</Expandable>
+
+</ExpandableGroup>

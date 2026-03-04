@@ -1,26 +1,75 @@
 ---
-title: Page Missing in Sidebar
-description: Fix a page that does not appear in navigation.
+title: Grantmaster page will not load
+description: Fix Grantmaster pages that show a blank screen, spinner, or unexpected error by checking browser cache, network access, session, and org.
 ---
+
 ## Symptoms
 
-- A new page file exists but does not show up in the sidebar.
+- Grantmaster opens to a blank screen or endless loading spinner.
+- A specific page (for example, Dashboard or Grants) shows an unexpected error message.
+- Other websites work, but Grantmaster pages are slow or partially loaded.
+- You recently switched orgs or roles and the page stopped loading as expected.
 
-- Clicking a nav item shows a 404.
+<Callout kind="info">
+
+These steps apply to the Grantmaster web app in any modern browser (Chrome, Edge, Firefox, Safari) on desktop or laptop devices.
+
+</Callout>
 
 ## Fix
 
 <Steps>
-  <Step title="Confirm the file name" icon="file-text" title-type="p">
-    Ensure the file exists.
+  <Step title="Refresh the page and try a hard reload" icon="refresh-cw">
+    Use a normal refresh first. If the page is still blank or broken, try a hard reload to bypass cached files:
+
+    - On Windows/Linux: press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> in your browser.
+    - On macOS: press <kbd>Command</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>.
+
+    If Grantmaster loads correctly after a hard reload, the issue was likely stale cached assets in your browser.
   </Step>
 
-  <Step title="Update navigation" icon="settings" title-type="p">
-    Add or fix the matching `path` in `documentation.json` or from navigation menu.
+  <Step title="Try an incognito or private window" icon="monitor">
+    Open a new incognito or private browsing window and sign in to Grantmaster from there.
+
+    - If pages load correctly in incognito, an extension or cached data in your main profile is likely interfering.
+    - Temporarily disable ad blockers, script blockers, or privacy extensions for the Grantmaster domain, then retry in a normal window.
   </Step>
 
-  <Step title="Publish" icon="refresh-cw" title-type="p">
-    Publish so changes take effect.
+  <Step title="Check your network and blocked scripts" icon="wifi">
+    Confirm you have a stable internet connection and that your network is not blocking parts of the app.
+
+    - Try loading another secure site that uses dynamic content, such as a dashboard or email app.
+    - If you are on a corporate network or VPN, ask your IT team to confirm that Grantmaster is allowed and that no scripts or API calls to Grantmaster are blocked by a firewall or proxy.
+  </Step>
+
+  <Step title="Verify you are signed in and in the correct org" icon="users">
+    Confirm that your session is active and that you have access to the org you expect.
+
+    - Check that your user avatar or initials are visible in the top bar and that the org name matches the org where you expect the page to work.
+    - If you recently switched orgs or changed roles (ADMIN, MANAGER, MEMBER, AUDITOR), switch back to the correct org and retry the page.
+    - If you suspect a sign in issue, follow the steps in [Cannot sign in to Grantmaster](/help-center/troubleshooting/cant-sign-in) and then try loading the page again.
+  </Step>
+
+  <Step title="Check for an outage or maintenance" icon="alert-triangle">
+    Ask your admin or IT team whether your org has a status page or internal communications channel for app outages.
+
+    - If a status page exists, check whether Grantmaster is affected.
+    - If you see a reported outage or maintenance window, wait for it to resolve and then reload the page.
+
+    <Callout kind="info">
+
+    Some organizations publish a status page for their critical apps. If your team uses one, check it for any open incidents affecting Grantmaster.
+
+    </Callout>
+  </Step>
+
+  <Step title="Capture error details and contact support" icon="help-circle">
+    If the page still will not load, collect details so support can help you faster.
+
+    - Take a screenshot of the entire browser window, including any visible error message.
+    - If you are comfortable with developer tools, open the browser console and note any red error messages or failed network requests when loading the page.
+    - Include the page URL, your browser name and version, and your org name when you contact your internal support team or Grantmaster support.
+
+    With these details, support can quickly see whether the issue is specific to your browser, your org access, or a broader incident.
   </Step>
 </Steps>
-

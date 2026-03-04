@@ -1,0 +1,202 @@
+---
+title: Fix receipt upload and OCR issues
+description: Diagnose and fix problems when uploading receipts or when AI/OCR extracts the wrong totals, dates, or merchants in Grantmaster expenses.
+---
+
+## Symptoms
+
+Receipt upload or OCR issues usually show up as one of these problems:
+
+- Upload fails with an error before the receipt appears on the expense.
+- You see a message that the file is too large or the upload stalls.
+- The file format is not accepted when you try to attach it.
+- The upload spinner runs for a long time and then times out.
+- The AI/OCR fills in the wrong merchant, date, or total amount.
+- Line items are missing or obviously incomplete after extraction.
+
+Use the steps below to match your symptom and fix it.
+
+<Callout kind="alert">
+
+Grantmaster stores receipts and extracted data under your organization's policies. Avoid uploading personal or unrelated documents that contain sensitive information not needed for reimbursement.
+
+</Callout>
+
+## Fix upload errors
+
+Use this section when the file will not upload, you see "file too large" or "unsupported format", or the upload is very slow.
+
+<Steps>
+
+<Step title="Check supported file types and size" icon="alert-triangle">
+
+Most organizations allow common image and document formats such as `JPG`, `PNG`, and `PDF`. If you try to upload other formats, the upload can fail.
+
+- Convert screenshots or scans from formats like `HEIC`, `WEBP`, or `TIFF` to `JPG` or `PNG`.
+- Export documents (for example, from a scanning app) as `PDF` instead of proprietary formats.
+- If you see a "file too large" message, reduce the file size below your organization's limit by using a lower-resolution export or a compression tool.
+
+After converting or compressing the file, upload the new version to the expense again.
+
+</Step>
+
+<Step title="Reduce image resolution or crop the receipt" icon="image">
+
+Very high-resolution photos can be slow to upload or hit size limits without looking different on screen.
+
+- Crop the photo so it shows only the receipt, not your desk or background.
+- Use your phone's "medium" or "standard" quality setting instead of "maximum".
+- Save or export the file again, then attach the smaller version to the expense.
+
+If the upload succeeds after resizing or cropping, you should see a thumbnail of your receipt on the expense.
+
+</Step>
+
+<Step title="Improve your connection and retry" icon="cloud">
+
+Slow or unstable connections can cause uploads to stall or time out, especially for larger PDFs.
+
+- If possible, switch from mobile data to a stable Wi‑Fi connection.
+- Close other apps or browser tabs that might be using bandwidth heavily.
+- Refresh the expense page, then start the upload again and wait until the thumbnail appears.
+
+If the issue only occurs on one network (for example, guest Wi‑Fi), try another network or a VPN session approved by your organization.
+
+</Step>
+
+<Step title="Try another device or browser" icon="monitor">
+
+Some upload issues are device- or browser-specific.
+
+- If you are on a phone, try uploading the same receipt from a desktop browser.
+- If you are on desktop, try a different browser (for example, switch between Chrome, Edge, or Safari).
+- If a browser extension blocks uploads, open a private/incognito window and upload the receipt there.
+
+If the receipt uploads correctly on one device but not another, share that detail with your admin or support if you need further help.
+
+</Step>
+
+</Steps>
+
+<Callout kind="tip">
+
+For reliable uploads and better OCR, use clear, uncropped photos in `JPG` or `PNG` under your organization's size limit, or clean, legible `PDF` exports from your scanner.
+
+</Callout>
+
+## Fix incorrect OCR totals, dates, or merchants
+
+Grantmaster uses AI/OCR on uploaded receipts to prefill merchant, date, total, and related fields in the expense. If these values are wrong, you remain responsible for submitting accurate information.
+
+<Steps>
+
+<Step title="Check image quality and retake if needed" icon="camera">
+
+Poor-quality images are the most common reason for bad OCR. Before you rely on extracted values:
+
+- Make sure the entire receipt is visible, including the merchant name, date, taxes, and total.
+- Avoid glare, shadows, and reflections on glossy paper.
+- Hold the camera parallel to the receipt so the text is not skewed.
+- Use good lighting and ensure the text looks sharp when you zoom in.
+
+If the image is hard to read with your eyes, take a new photo and upload it so OCR has a clean source.
+
+</Step>
+
+<Step title="Crop and increase contrast" icon="edit">
+
+Busy backgrounds and extra content around the receipt can confuse OCR.
+
+- Crop the image tightly around the receipt so only the document is visible.
+- If your camera or editing app supports it, increase contrast and brightness slightly so text stands out.
+- Remove other documents or hands from the frame before retaking the photo.
+
+Upload the updated image to the expense and let OCR run again. You should see more accurate merchant, date, and total fields.
+
+</Step>
+
+<Step title="Manually correct extracted fields" icon="edit">
+
+If OCR still reads the wrong values, always fix them before submission:
+
+- Edit the **merchant**, **date**, **currency**, **tax**, and **total** fields directly in the expense form.
+- Add or correct any **line items** the OCR missed, including descriptions, categories, and amounts.
+- Verify that the final total in the expense matches the total printed on the receipt.
+
+These edits override the OCR output and are what your approver and finance team will use.
+
+</Step>
+
+<Step title="Explain corrections for your approver" icon="users">
+
+When the receipt is hard to read or the totals are not obvious, adding a short note helps your approver review faster.
+
+- Use the comment or notes field on the expense to explain any differences.
+- Mention details like split totals, tips written by hand, or multi-page receipts.
+- Call out if you combined several receipts into one expense or left some text untranslated.
+
+Approvers see both your corrected fields and the original receipt image, so clear notes reduce back-and-forth questions.
+
+</Step>
+
+</Steps>
+
+## Fix missing or incomplete line items
+
+Sometimes OCR captures the total but not individual items, taxes, or categories.
+
+<Steps>
+
+<Step title="Confirm that item details are visible" icon="search">
+
+OCR cannot extract line items that are cut off or blurred.
+
+- Check that each item line, including quantity and price, is readable in the uploaded image.
+- Ensure page edges are not cut off when you photograph long or multi-page receipts.
+- For multi-page receipts, upload all pages so the full list is available.
+
+If details are missing from the photo, retake it to include the full receipt.
+
+</Step>
+
+<Step title="Add or adjust line items manually" icon="plus">
+
+If OCR does not create line items or misses some entries:
+
+- Manually add line items in the expense form with clear descriptions and amounts.
+- Group small items where allowed by your policy, such as "Snacks at station" instead of listing each low-value item separately.
+- Set the appropriate category for each line so routing and approvals are correct.
+
+The sum of your line items should match the total value on the receipt.
+
+</Step>
+
+<Step title="Use notes for complex receipts" icon="info">
+
+For receipts with many items or unusual layouts, a brief summary is often clearer than one item per line.
+
+- Summarize the key parts that matter for policy, such as "Hotel stay: room, taxes, parking".
+- Explain large or exceptional items that might trigger extra review.
+- If the receipt includes personal items not being claimed, call out what you excluded.
+
+These details help approvers understand why the total you submitted differs from the printed total, if it does.
+
+</Step>
+
+</Steps>
+
+## When to contact support or your admin
+
+If you have tried the steps above and still cannot upload a receipt or get usable OCR results:
+
+- Capture screenshots or photos that show the error message and the receipt you tried to upload.
+- Note whether the problem happens on multiple devices or networks.
+- Share this information with your internal admin or support contact so they can investigate or escalate.
+
+Your organization may also have specific rules about accepted formats, maximum file sizes, or when OCR is required versus optional.
+
+## Related guides
+
+For step-by-step instructions on creating expenses and adding receipts, see the expense submission guide:
+
+- [Submit an expense](/help-center/guides/submit-expense)

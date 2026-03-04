@@ -24,11 +24,6 @@
                 "icon": "home"
               },
               {
-                "title": "Architecture overview",
-                "path": "architecture-overview",
-                "icon": "layers"
-              },
-              {
                 "title": "Getting Started",
                 "path": "getting-started",
                 "icon": "rocket"
@@ -39,9 +34,9 @@
                 "icon": "zap"
               },
               {
-                "title": "Components",
-                "path": "components",
-                "icon": "code"
+                "title": "Architecture overview",
+                "path": "architecture-overview",
+                "icon": "layers"
               }
             ]
           },
@@ -99,8 +94,7 @@
             ]
           },
           {
-            "group": "Sample Endpoints",
-            "openapi": "openapi.yaml"
+            "group": "Sample Endpoints"
           }
         ]
       },
@@ -109,7 +103,7 @@
         "icon": "help-circle",
         "pages": [
           {
-            "title": "Help Center",
+            "title": "Grantmaster Help Center",
             "path": "help-center",
             "icon": "home"
           },
@@ -119,8 +113,16 @@
             "expandable": false,
             "pages": [
               {
-                "title": "Documentation Source",
+                "title": "Getting started with Grantmaster",
                 "path": "help-center/faq/getting-started"
+              },
+              {
+                "title": "Roles and permissions FAQ",
+                "path": "help-center/faq/roles-permissions"
+              },
+              {
+                "title": "Grants lifecycle FAQ",
+                "path": "help-center/faq/grants-lifecycle"
               }
             ]
           },
@@ -130,8 +132,16 @@
             "expandable": false,
             "pages": [
               {
-                "title": "Page Missing in Sidebar",
+                "title": "Grantmaster page will not load",
                 "path": "help-center/troubleshooting/install-error"
+              },
+              {
+                "title": "Can’t sign in to Grantmaster",
+                "path": "help-center/troubleshooting/cant-sign-in"
+              },
+              {
+                "title": "Fix receipt upload and OCR issues",
+                "path": "help-center/troubleshooting/receipt-upload"
               }
             ]
           },
@@ -141,8 +151,12 @@
             "expandable": false,
             "pages": [
               {
-                "title": "Create Your First Page",
+                "title": "Set up your organization and first project",
                 "path": "help-center/guides/setup-project"
+              },
+              {
+                "title": "Submit an expense with a receipt",
+                "path": "help-center/guides/submit-expense"
               }
             ]
           }
@@ -161,7 +175,7 @@
       }
     ]
   },
-  "template": "classic",
+  "template": "atlas",
   "logo-dark": "https://blob-cdn.documentation.ai/org-17e272de-6257-41ec-8fa3-df69f1afc9ba/doc-b0f98041-40c8-4698-a1c8-189e7ac14c5c/1771937175367-4izgkphs0f-grantmaster.png?q=85&fm=auto&auto=compress%2Cformat",
   "logo-light": "https://blob-cdn.documentation.ai/org-17e272de-6257-41ec-8fa3-df69f1afc9ba/doc-b0f98041-40c8-4698-a1c8-189e7ac14c5c/1771937175367-4izgkphs0f-grantmaster.png?q=85&fm=auto&auto=compress%2Cformat",
   "favicon": "https://blob-cdn.documentation.ai/org-17e272de-6257-41ec-8fa3-df69f1afc9ba/doc-b0f98041-40c8-4698-a1c8-189e7ac14c5c/1771937175367-4izgkphs0f-grantmaster.png?q=85&fm=auto&auto=compress%2Cformat"
