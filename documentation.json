@@ -19,6 +19,11 @@
             "icon": "rocket",
             "pages": [
               {
+                "title": "Grantmaster Help Center",
+                "path": "help-center",
+                "icon": "home"
+              },
+              {
                 "title": "Introduction",
                 "path": "introduction",
                 "icon": "home"
@@ -102,11 +107,6 @@
         "tab": "Help Center",
         "icon": "help-circle",
         "pages": [
-          {
-            "title": "Grantmaster Help Center",
-            "path": "help-center",
-            "icon": "home"
-          },
           {
             "group": "FAQs",
             "icon": "help-circle",
