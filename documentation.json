@@ -19,11 +19,6 @@
             "icon": "rocket",
             "pages": [
               {
-                "title": "Grantmaster Help Center",
-                "path": "help-center",
-                "icon": "home"
-              },
-              {
                 "title": "Introduction",
                 "path": "introduction",
                 "icon": "home"
@@ -32,6 +27,11 @@
                 "title": "Getting Started",
                 "path": "getting-started",
                 "icon": "rocket"
+              },
+              {
+                "title": "Grantmaster Help Center",
+                "path": "help-center",
+                "icon": "home"
               },
               {
                 "title": "Quickstart",
